@@ -1,132 +1,282 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Aplikasi Hitung HM Permesinan</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            padding: 20px;
-        }
-        h2 {
-            text-align: center;
-        }
-        .container {
-            background: #fff;
-            padding: 20px;
-            max-width: 600px;
-            margin: auto;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        label {
-            font-weight: bold;
-        }
-        input, button {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            margin-bottom: 15px;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 8px;
-            text-align: center;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HM PMKS System</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+    --blue:#0d47a1;
+    --blue-light:#1976d2;
+    --bg:#f4f6f8;
+    --danger:#d32f2f;
+    --warning:#f9a825;
+    --normal:#2e7d32;
+}
+body{
+    font-family:Poppins,sans-serif;
+    margin:0;
+    background:var(--bg);
+}
+header{
+    background:var(--blue);
+    color:white;
+    padding:15px;
+    text-align:center;
+}
+nav{
+    display:flex;
+    background:#fff;
+    border-bottom:1px solid #ddd;
+}
+nav button{
+    flex:1;
+    padding:12px;
+    border:none;
+    background:#fff;
+    cursor:pointer;
+    font-weight:600;
+}
+nav button.active{
+    background:var(--blue-light);
+    color:#fff;
+}
+.container{
+    padding:15px;
+}
+.card{
+    background:#fff;
+    padding:15px;
+    border-radius:6px;
+    margin-bottom:15px;
+}
+input,select,button{
+    width:100%;
+    padding:8px;
+    margin:6px 0;
+}
+button.primary{
+    background:var(--blue);
+    color:#fff;
+    border:none;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+th,td{
+    border:1px solid #ccc;
+    padding:6px;
+    text-align:center;
+}
+.status-normal{color:var(--normal);font-weight:bold;}
+.status-warning{color:var(--warning);font-weight:bold;}
+.status-danger{color:var(--danger);font-weight:bold;}
+.hidden{display:none;}
+</style>
 </head>
+
 <body>
 
+<header>
+    <h2>SISTEM HM MESIN PMKS</h2>
+    <small>Offline • PWA • LocalStorage</small>
+</header>
+
+<nav>
+    <button class="active" onclick="openTab('hm')">Input HM</button>
+    <button onclick="openTab('history')">Riwayat</button>
+    <button onclick="openTab('report')">Laporan FDF</button>
+    <button onclick="openTab('spare')">Spare Part</button>
+</nav>
+
 <div class="container">
-    <h2>Aplikasi Hitung HM Permesinan</h2>
 
-    <label>Tanggal</label>
-    <input type="date" id="tanggal">
+<!-- INPUT HM -->
+<div id="hm" class="tab card">
+<h3>Input HM Mesin</h3>
+<select id="mesinSelect"></select>
+<input type="number" id="hmAwal" readonly placeholder="HM Awal">
+<input type="number" id="hmAkhir" placeholder="HM Akhir">
+<input type="number" id="hmHari" readonly placeholder="HM Hari Ini">
+<button class="primary" onclick="simpanHM()">Simpan</button>
+</div>
 
-    <label>Nama Mesin</label>
-    <input type="text" id="mesin" placeholder="Contoh: Boiler 1">
+<!-- HISTORY -->
+<div id="history" class="tab card hidden">
+<h3>Riwayat HM</h3>
+<table>
+<thead>
+<tr>
+<th>Tanggal</th><th>Mesin</th><th>HM Awal</th><th>HM Akhir</th><th>HM Hari</th>
+</tr>
+</thead>
+<tbody id="historyTable"></tbody>
+</table>
+</div>
 
-    <label>HM Awal</label>
-    <input type="number" id="hmAwal" step="0.1">
+<!-- REPORT -->
+<div id="report" class="tab card hidden">
+<h3>Laporan FDF</h3>
+<button class="primary" onclick="generatePDF()">Generate PDF</button>
+</div>
 
-    <label>HM Akhir</label>
-    <input type="number" id="hmAkhir" step="0.1">
+<!-- SPARE PART -->
+<div id="spare" class="tab card hidden">
+<h3>Spare Part Monitoring</h3>
+<select id="spareMesin"></select>
+<input id="spareNama" placeholder="Nama Spare Part">
+<input type="number" id="spareLife" placeholder="Lifetime HM">
+<input type="number" id="spareUsed" placeholder="HM Terpakai">
+<button class="primary" onclick="simpanSpare()">Simpan Spare Part</button>
 
-    <button onclick="simpanData()">Hitung & Simpan</button>
+<table>
+<thead>
+<tr>
+<th>Mesin</th><th>Spare</th><th>Life</th><th>Terpakai</th><th>Sisa</th><th>Status</th><th>Aksi</th>
+</tr>
+</thead>
+<tbody id="spareTable"></tbody>
+</table>
+</div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Tanggal</th>
-                <th>Mesin</th>
-                <th>HM Awal</th>
-                <th>HM Akhir</th>
-                <th>Total HM</th>
-            </tr>
-        </thead>
-        <tbody id="dataHM"></tbody>
-    </table>
 </div>
 
 <script>
-    let data = JSON.parse(localStorage.getItem("hmData")) || [];
+/* ===== DATA MASTER ===== */
+const mesinList=[
+"Press No. 1","Press No. 2","Press No. 3","Press No. 4",
+"Digester No. 1","Digester No. 2","Digester No. 3","Digester No. 4",
+"Sludge Centrifuge No. 3","Sludge Centrifuge No. 4","Sludge Centrifuge No. 5",
+"Sludge Centrifuge No. 6","Sludge Centrifuge No. 7","Sludge Centrifuge No. 8",
+"Ripple Mill No. 1","Ripple Mill No. 2","Ripple Mill No. 3"
+];
 
-    function simpanData() {
-        let tanggal = document.getElementById("tanggal").value;
-        let mesin = document.getElementById("mesin").value;
-        let hmAwal = parseFloat(document.getElementById("hmAwal").value);
-        let hmAkhir = parseFloat(document.getElementById("hmAkhir").value);
+let hmData=JSON.parse(localStorage.getItem("hmData"))||{};
+let history=JSON.parse(localStorage.getItem("hmHistory"))||[];
+let spareData=JSON.parse(localStorage.getItem("spareData"))||[];
 
-        if (!tanggal || !mesin || isNaN(hmAwal) || isNaN(hmAkhir)) {
-            alert("Lengkapi semua data!");
-            return;
-        }
+/* ===== INIT ===== */
+function init(){
+    mesinList.forEach(m=>{
+        if(!hmData[m]) hmData[m]={hmAwal:0};
+        mesinSelect.innerHTML+=`<option>${m}</option>`;
+        spareMesin.innerHTML+=`<option>${m}</option>`;
+    });
+    loadHM();
+    renderHistory();
+    renderSpare();
+}
+init();
 
-        let totalHM = hmAkhir - hmAwal;
+/* ===== TAB ===== */
+function openTab(id){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    event.target.classList.add('active');
+}
 
-        let record = { tanggal, mesin, hmAwal, hmAkhir, totalHM };
-        data.push(record);
-        localStorage.setItem("hmData", JSON.stringify(data));
+/* ===== HM ===== */
+mesinSelect.onchange=loadHM;
+hmAkhir.oninput=()=>hmHari.value=(hmAkhir.value-hmAwal.value).toFixed(2);
 
-        tampilkanData();
-        document.getElementById("mesin").value = "";
-        document.getElementById("hmAwal").value = "";
-        document.getElementById("hmAkhir").value = "";
+function loadHM(){
+    let m=mesinSelect.value;
+    hmAwal.value=hmData[m].hmAwal.toFixed(2);
+    hmAkhir.value="";
+    hmHari.value="";
+}
+
+function simpanHM(){
+    let m=mesinSelect.value;
+    let awal=parseFloat(hmAwal.value);
+    let akhir=parseFloat(hmAkhir.value);
+    if(isNaN(akhir)||akhir<awal) return alert("HM Akhir tidak valid");
+    let hari=(akhir-awal).toFixed(2);
+
+    history.push({
+        tanggal:new Date().toLocaleDateString(),
+        mesin:m,awal,akhir,hari
+    });
+
+    hmData[m].hmAwal=akhir;
+
+    localStorage.setItem("hmData",JSON.stringify(hmData));
+    localStorage.setItem("hmHistory",JSON.stringify(history));
+
+    loadHM(); renderHistory();
+}
+
+/* ===== HISTORY ===== */
+function renderHistory(){
+    historyTable.innerHTML="";
+    history.forEach(h=>{
+        historyTable.innerHTML+=`
+        <tr><td>${h.tanggal}</td><td>${h.mesin}</td>
+        <td>${h.awal}</td><td>${h.akhir}</td><td>${h.hari}</td></tr>`;
+    });
+}
+
+/* ===== SPARE PART ===== */
+function simpanSpare(){
+    let m=spareMesin.value;
+    let n=spareNama.value;
+    let l=+spareLife.value;
+    let u=+spareUsed.value;
+    if(!n||!l) return alert("Data belum lengkap");
+    spareData.push({m,n,l,u});
+    localStorage.setItem("spareData",JSON.stringify(spareData));
+    renderSpare();
+}
+
+function renderSpare(){
+    spareTable.innerHTML="";
+    spareData.forEach((s,i)=>{
+        let sisa=s.l-s.u;
+        let p=(s.u/s.l)*100;
+        let st=p>=90?"CRITICAL":p>=75?"WARNING":"NORMAL";
+        spareTable.innerHTML+=`
+        <tr>
+        <td>${s.m}</td><td>${s.n}</td>
+        <td>${s.l}</td><td>${s.u}</td>
+        <td>${sisa}</td>
+        <td class="status-${st=='NORMAL'?'normal':st=='WARNING'?'warning':'danger'}">${st}</td>
+        <td><button onclick="hapusSpare(${i})">X</button></td>
+        </tr>`;
+    });
+}
+
+function hapusSpare(i){
+    if(confirm("Hapus spare part?")){
+        spareData.splice(i,1);
+        localStorage.setItem("spareData",JSON.stringify(spareData));
+        renderSpare();
     }
+}
 
-    function tampilkanData() {
-        let tabel = document.getElementById("dataHM");
-        tabel.innerHTML = "";
-        data.forEach(d => {
-            tabel.innerHTML += `
-                <tr>
-                    <td>${d.tanggal}</td>
-                    <td>${d.mesin}</td>
-                    <td>${d.hmAwal}</td>
-                    <td>${d.hmAkhir}</td>
-                    <td>${d.totalHM}</td>
-                </tr>`;
-        });
-    }
-
-    tampilkanData();
+/* ===== PDF ===== */
+function generatePDF(){
+    const {jsPDF}=window.jspdf;
+    let pdf=new jsPDF();
+    pdf.text("LAPORAN HM PMKS",10,10);
+    let y=20;
+    history.forEach(h=>{
+        pdf.text(`${h.tanggal} - ${h.mesin} : ${h.hari} HM`,10,y);
+        y+=7;
+    });
+    pdf.save("laporan-hm-pmks.pdf");
+}
 </script>
 
 </body>
