@@ -1,727 +1,718 @@
-// ============================================
-// SISTEM PERHITUNGAN HM MESIN PKS
-// PT. BANGKITGIAT USAHA MANDIRI
-// By. Jonius Abertus
-// ============================================
-
-// Data Storage
-let machineData = {
-    press: { 1: [], 2: [], 3: [], 4: [] },
-    digester: { 1: [], 2: [], 3: [], 4: [] },
-    sludge: { 3: [], 4: [], 5: [], 6: [], 7: [], 8: [] },
-    ripple: { 1: [], 2: [], 3: [] }
-};
-
-let spareParts = {
-    press: [],
-    digester: [],
-    sludge: [],
-    ripple: []
-};
-
-let currentMachine = null;
-let currentStatus = 'normal';
-let allData = [];
-
-// Initialize Application
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Aplikasi dimulai...');
-    loadDataFromStorage();
-    initializeApp();
-    setTodayDate();
-    updateAllDisplays();
-});
-
-// Initialize App
-function initializeApp() {
-    console.log('Inisialisasi aplikasi...');
-    loadDataFromStorage();
-    updateSummaryTable();
-    updateHistoryTable();
-    updateSparePartTable();
+:root {
+    --primary: #0D47A1;
+    --secondary: #FF6F00;
+    --accent: #2196F3;
+    --dark-blue: #1565C0;
+    --light-blue: #E3F2FD;
+    --success: #4CAF50;
+    --warning: #FF9800;
+    --danger: #F44336;
+    --background: #F5F7FA;
+    --card-bg: #FFFFFF;
+    --text: #263238;
+    --border: #E0E0E0;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius: 8px;
 }
 
-// Set today's date as default
-function setTodayDate() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('operasiDate').value = today;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
 }
 
-// ============================================
-// TAB NAVIGATION
-// ============================================
-
-function switchTab(tabName) {
-    // Hide all tabs
-    const tabs = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    
-    // Remove active class from all buttons
-    const buttons = document.querySelectorAll('.tab-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    
-    // Show selected tab
-    document.getElementById(tabName).classList.add('active');
-    
-    // Add active class to clicked button
-    event.target.closest('.tab-btn').classList.add('active');
-    
-    console.log('Beralih ke tab: ' + tabName);
+body {
+    background: linear-gradient(135deg, #ECEFF1 0%, #CFD8DC 100%);
+    min-height: 100vh;
+    color: var(--text);
+    padding: 15px;
 }
 
-// ============================================
-// MACHINE SELECTION
-// ============================================
-
-function selectMachine(type, number) {
-    currentMachine = { type: type, number: number };
-    
-    const machineNames = {
-        press: 'MESIN PRESS',
-        digester: 'DIGESTER',
-        sludge: 'SLUDGE CENTRIFUGE',
-        ripple: 'RIPPLE MILL'
-    };
-    
-    document.getElementById('selectedMachine').value = 
-        machineNames[type] + ' #' + number;
-    
-    // Highlight selected button
-    document.querySelectorAll('.machine-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.closest('.machine-btn').classList.add('active');
-    
-    console.log('Mesin terpilih: ' + type + ' #' + number);
+.main-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--dark-blue) 100%);
+    color: white;
+    padding: 20px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
 }
 
-// ============================================
-// STATUS SELECTION
-// ============================================
-
-function selectStatus(status) {
-    currentStatus = status;
-    document.querySelectorAll('.status-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    console.log('Status: ' + status);
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
 }
 
-// ============================================
-// CALCULATION FUNCTIONS
-// ============================================
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-function hitungHM() {
-    if (!currentMachine) {
-        alert('Pilih mesin terlebih dahulu!');
-        return;
+.logo-icon {
+    background: linear-gradient(135deg, #2196F3 0%, #0D47A1 100%);
+    color: white;
+    width: auto;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Roboto Condensed', sans-serif;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    padding: 0 25px;
+    letter-spacing: 2px;
+    gap: 10px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.title-section h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.title-section .subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+    font-family: 'Roboto Condensed', sans-serif;
+    letter-spacing: 1px;
+}
+
+.header-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    backdrop-filter: blur(10px);
+    min-width: 120px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+/* Main Container */
+.main-container {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Tabs Navigation */
+.tabs-navigation {
+    display: flex;
+    background: white;
+    border-radius: var(--radius);
+    padding: 5px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    flex: 1;
+    min-width: 180px;
+    padding: 15px 20px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #666;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 8px rgba(13, 71, 161, 0.2);
+}
+
+.tab-btn:hover:not(.active) {
+    background: var(--light-blue);
+    color: var(--primary);
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Content Grid */
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+/* Cards */
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 25px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--light-blue);
+}
+
+.card-title {
+    color: var(--primary);
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Machine Selection */
+.machine-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #F8F9FA;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.machine-btn {
+    padding: 10px 20px;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.machine-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.machine-btn:hover:not(.active) {
+    background: var(--light-blue);
+    border-color: var(--accent);
+    color: var(--primary);
+}
+
+.machine-btn.warning {
+    border-color: var(--warning);
+    background: #FFF3E0;
+}
+
+.machine-btn.danger {
+    border-color: var(--danger);
+    background: #FFEBEE;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+}
+
+/* HM Input Section */
+.hm-input-section {
+    background: linear-gradient(135deg, #E3F2FD 0%, #F5F7FA 100%);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid #BBDEFB;
+}
+
+.hm-input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.hm-input-group {
+    margin-bottom: 15px;
+}
+
+.hm-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hm-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    background: white;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.hm-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    outline: none;
+}
+
+/* Status Selection */
+.status-selection {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.status-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.status-btn.normal {
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.status-btn.normal.active {
+    background: var(--success);
+    color: white;
+}
+
+.status-btn.warning {
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.status-btn.warning.active {
+    background: var(--warning);
+    color: white;
+}
+
+.status-btn.danger {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.status-btn.danger.active {
+    background: var(--danger);
+    color: white;
+}
+
+/* Results Display */
+.results-display {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.result-box {
+    background: white;
+    padding: 20px;
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary);
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.result-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.result-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.result-unit {
+    font-size: 16px;
+    color: #666;
+    margin-left: 5px;
+}
+
+/* Table Styles */
+.table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.data-table th {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    padding: 15px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 13px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.data-table th:last-child {
+    border-right: none;
+}
+
+.data-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    vertical-align: middle;
+    border-right: 1px solid #f0f0f0;
+}
+
+.data-table td:last-child {
+    border-right: none;
+}
+
+.data-table tr:nth-child(even) {
+    background: #F8F9FA;
+}
+
+.data-table tr:hover {
+    background: var(--light-blue);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.action-btn.edit {
+    background: var(--warning);
+    color: white;
+}
+
+.action-btn.edit:hover {
+    background: #F57C00;
+}
+
+.action-btn.delete {
+    background: var(--danger);
+    color: white;
+}
+
+.action-btn.delete:hover {
+    background: #D32F2F;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 500px;
+    box-shadow: var(--shadow);
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--light-blue);
+}
+
+.modal-title {
+    color: var(--primary);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-modal:hover {
+    color: var(--danger);
+}
+
+/* Button Styles */
+.button-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 16px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--dark-blue) 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(13, 71, 161, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success) 0%, #2E7D32 100%);
+    color: white;
+}
+
+.btn-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning) 0%, #EF6C00 100%);
+    color: white;
+}
+
+.btn-warning:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 152, 0, 0.3);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #607D8B 0%, #455A64 100%);
+    color: white;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(96, 125, 139, 0.3);
+}
+
+/* Notification */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: var(--radius);
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--shadow);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.notification.success { background: var(--success); }
+.notification.warning { background: var(--warning); }
+.notification.danger { background: var(--danger); }
+.notification.info { background: var(--accent); }
+
+/* Footer */
+.footer {
+    background: var(--dark-blue);
+    color: white;
+    padding: 25px;
+    border-radius: var(--radius);
+    text-align: center;
+    margin-top: 40px;
+}
+
+.footer p {
+    margin-bottom: 10px;
+}
+
+.signature {
+    font-style: italic;
+    color: #BBDEFB;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
     }
     
-    const hmAwal = parseFloat(document.getElementById('hmAwal').value);
-    const hmAkhir = parseFloat(document.getElementById('hmAkhir').value);
-    
-    if (isNaN(hmAwal) || isNaN(hmAkhir)) {
-        alert('Masukkan HM Awal dan HM Akhir dengan benar!');
-        return;
+    .header-stats {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
     }
     
-    const selisih = hmAkhir - hmAwal;
-    
-    if (selisih < 0) {
-        alert('HM Akhir harus lebih besar dari HM Awal!');
-        return;
+    .tabs-navigation {
+        flex-direction: column;
     }
     
-    // Display results
-    document.getElementById('resultSelisih').textContent = selisih.toFixed(2) + ' jam';
-    document.getElementById('resultHariIni').textContent = selisih.toFixed(2) + ' jam';
-    
-    console.log('Perhitungan HM - Selisih: ' + selisih);
-}
-
-function hitungSemua() {
-    let totalHariIni = 0;
-    let totalCumulative = 0;
-    let totalMesin = 0;
-    
-    // Iterate through all machines and calculate
-    for (let type in machineData) {
-        for (let number in machineData[type]) {
-            if (machineData[type][number].length > 0) {
-                totalMesin++;
-                let machineTotal = 0;
-                machineData[type][number].forEach(data => {
-                    machineTotal += data.selisih;
-                });
-                totalCumulative += machineTotal;
-                
-                // Get today's data
-                const today = new Date().toISOString().split('T')[0];
-                machineData[type][number].forEach(data => {
-                    if (data.tanggal === today) {
-                        totalHariIni += data.selisih;
-                    }
-                });
-            }
-        }
+    .tab-btn {
+        min-width: 100%;
     }
     
-    document.getElementById('totalHariIni').textContent = totalHariIni.toFixed(2);
-    document.getElementById('totalCumulative').textContent = totalCumulative.toFixed(2);
-    document.getElementById('totalMesin').textContent = totalMesin;
-    
-    document.getElementById('resultTotal').textContent = totalCumulative.toFixed(2) + ' jam';
-    document.getElementById('resultMesin').textContent = totalMesin + ' unit';
-    
-    console.log('Perhitungan Semua - Total HM: ' + totalCumulative);
-}
-
-// ============================================
-// DATA MANAGEMENT
-// ============================================
-
-function simpanData() {
-    if (!currentMachine) {
-        alert('Pilih mesin terlebih dahulu!');
-        return;
+    .content-grid {
+        grid-template-columns: 1fr;
     }
     
-    const hmAwal = parseFloat(document.getElementById('hmAwal').value);
-    const hmAkhir = parseFloat(document.getElementById('hmAkhir').value);
-    const tanggal = document.getElementById('operasiDate').value;
-    const keterangan = document.getElementById('hmNotes').value;
-    
-    if (isNaN(hmAwal) || isNaN(hmAkhir) || !tanggal) {
-        alert('Lengkapi semua data terlebih dahulu!');
-        return;
+    .machine-selection {
+        flex-direction: column;
     }
     
-    const selisih = hmAkhir - hmAwal;
-    
-    if (selisih < 0) {
-        alert('HM Akhir harus lebih besar dari HM Awal!');
-        return;
+    .machine-btn {
+        min-width: 100%;
     }
     
-    const dataRecord = {
-        tanggal: tanggal,
-        mesin: currentMachine.type,
-        unit: currentMachine.number,
-        hmAwal: hmAwal,
-        hmAkhir: hmAkhir,
-        selisih: selisih,
-        status: currentStatus,
-        keterangan: keterangan,
-        timestamp: new Date().getTime()
-    };
-    
-    // Add to machine data
-    machineData[currentMachine.type][currentMachine.number].push(dataRecord);
-    
-    // Add to all data for history
-    allData.push(dataRecord);
-    
-    // Save to local storage
-    saveDataToStorage();
-    
-    // Update displays
-    updateAllDisplays();
-    
-    // Show success message
-    alert('Data berhasil disimpan!');
-    
-    // Reset form
-    resetForm();
-    
-    console.log('Data disimpan:', dataRecord);
-}
-
-function resetForm() {
-    document.getElementById('hmAwal').value = '';
-    document.getElementById('hmAkhir').value = '';
-    document.getElementById('hmNotes').value = '';
-    document.getElementById('resultSelisih').textContent = '0.00 jam';
-    document.getElementById('resultHariIni').textContent = '0.00 jam';
-    document.getElementById('resultTotal').textContent = '0.00 jam';
-    document.getElementById('resultMesin').textContent = '0 unit';
-    setTodayDate();
-    currentMachine = null;
-    currentStatus = 'normal';
-    document.getElementById('selectedMachine').value = 'Pilih mesin terlebih dahulu';
-    document.querySelectorAll('.machine-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector('.status-btn.normal').classList.add('active');
-    console.log('Form direset');
-}
-
-// ============================================
-// DISPLAY UPDATES
-// ============================================
-
-function updateAllDisplays() {
-    updateSummaryTable();
-    updateHistoryTable();
-    updateSparePartTable();
-    hitungSemua();
-}
-
-function updateSummaryTable() {
-    const tbody = document.querySelector('#summaryTable tbody');
-    tbody.innerHTML = '';
-    
-    let no = 1;
-    let totalMesin = 0;
-    
-    for (let type in machineData) {
-        for (let number in machineData[type]) {
-            const data = machineData[type][number];
-            if (data.length > 0) {
-                totalMesin++;
-                const latestData = data[data.length - 1];
-                const totalHM = data.reduce((sum, item) => sum + item.selisih, 0);
-                
-                const typeNames = {
-                    press: 'MESIN PRESS',
-                    digester: 'DIGESTER',
-                    sludge: 'SLUDGE CENTRIFUGE',
-                    ripple: 'RIPPLE MILL'
-                };
-                
-                const statusClass = latestData.status === 'danger' ? 'danger' : 
-                                   latestData.status === 'warning' ? 'warning' : 'normal';
-                
-                const row = `
-                    <tr>
-                        <td>${no}</td>
-                        <td>${typeNames[type]}</td>
-                        <td>#${number}</td>
-                        <td>${latestData.hmAkhir.toFixed(2)}</td>
-                        <td>${totalHM.toFixed(2)}</td>
-                        <td><span class="status-badge ${statusClass}">${latestData.status.toUpperCase()}</span></td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-                no++;
-            }
-        }
+    .hm-input-grid {
+        grid-template-columns: 1fr;
     }
     
-    document.getElementById('totalMesinBadge').textContent = 
-        '📊 ' + totalMesin + ' Mesin';
-}
-
-function updateHistoryTable() {
-    const tbody = document.querySelector('#historyTable tbody');
-    tbody.innerHTML = '';
-    
-    // Sort by tanggal descending
-    const sortedData = [...allData].sort((a, b) => 
-        new Date(b.tanggal) - new Date(a.tanggal)
-    );
-    
-    sortedData.forEach((data, index) => {
-        const typeNames = {
-            press: 'MESIN PRESS',
-            digester: 'DIGESTER',
-            sludge: 'SLUDGE CENTRIFUGE',
-            ripple: 'RIPPLE MILL'
-        };
-        
-        const statusClass = data.status === 'danger' ? 'danger' : 
-                           data.status === 'warning' ? 'warning' : 'normal';
-        
-        const row = `
-            <tr>
-                <td>${data.tanggal}</td>
-                <td>${typeNames[data.mesin]} #${data.unit}</td>
-                <td>${data.hmAwal.toFixed(2)}</td>
-                <td>${data.hmAkhir.toFixed(2)}</td>
-                <td>${data.selisih.toFixed(2)}</td>
-                <td>${data.selisih.toFixed(2)}</td>
-                <td><span class="status-badge ${statusClass}">${data.status.toUpperCase()}</span></td>
-                <td>${data.keterangan || '-'}</td>
-                <td>
-                    <button class="btn btn-danger btn-sm" onclick="deleteHistory(${index})">
-                        <i class="fas fa-trash"></i> Hapus
-                    </button>
-                </td>
-            </tr>
-        `;
-        tbody.innerHTML += row;
-    });
-}
-
-function deleteHistory(index) {
-    if (confirm('Yakin ingin menghapus data ini?')) {
-        allData.splice(index, 1);
-        saveDataToStorage();
-        updateHistoryTable();
-        console.log('Data dihapus');
-    }
-}
-
-function filterHistory() {
-    const filterMachine = document.getElementById('filterMachine').value;
-    const filterDate = document.getElementById('filterDate').value;
-    
-    let filtered = allData;
-    
-    if (filterMachine !== 'all') {
-        filtered = filtered.filter(data => data.mesin === filterMachine);
+    .results-display {
+        grid-template-columns: repeat(2, 1fr);
     }
     
-    if (filterDate) {
-        filtered = filtered.filter(data => data.tanggal === filterDate);
-    }
-    
-    const tbody = document.querySelector('#historyTable tbody');
-    tbody.innerHTML = '';
-    
-    filtered.forEach((data, index) => {
-        const typeNames = {
-            press: 'MESIN PRESS',
-            digester: 'DIGESTER',
-            sludge: 'SLUDGE CENTRIFUGE',
-            ripple: 'RIPPLE MILL'
-        };
-        
-        const statusClass = data.status === 'danger' ? 'danger' : 
-                           data.status === 'warning' ? 'warning' : 'normal';
-        
-        const row = `
-            <tr>
-                <td>${data.tanggal}</td>
-                <td>${typeNames[data.mesin]} #${data.unit}</td>
-                <td>${data.hmAwal.toFixed(2)}</td>
-                <td>${data.hmAkhir.toFixed(2)}</td>
-                <td>${data.selisih.toFixed(2)}</td>
-                <td>${data.selisih.toFixed(2)}</td>
-                <td><span class="status-badge ${statusClass}">${data.status.toUpperCase()}</span></td>
-                <td>${data.keterangan || '-'}</td>
-                <td>
-                    <button class="btn btn-danger btn-sm" onclick="deleteHistory(${index})">
-                        <i class="fas fa-trash"></i> Hapus
-                    </button>
-                </td>
-            </tr>
-        `;
-        tbody.innerHTML += row;
-    });
-    
-    console.log('History difilter');
-}
-
-// ============================================
-// SPARE PARTS MANAGEMENT
-// ============================================
-
-function openAddSparePartModal() {
-    document.getElementById('modalTitle').textContent = 'TAMBAH SPARE PART';
-    document.getElementById('editMachineType').value = 'press';
-    document.getElementById('editPartName').value = '';
-    document.getElementById('editLifetime').value = '';
-    document.getElementById('editUsed').value = '';
-    document.getElementById('editIndex').value = '';
-    document.getElementById('sparePartModal').style.display = 'block';
-}
-
-function closeSparePartModal() {
-    document.getElementById('sparePartModal').style.display = 'none';
-}
-
-function saveSparePart() {
-    const machineType = document.getElementById('editMachineType').value;
-    const partName = document.getElementById('editPartName').value;
-    const lifetime = parseFloat(document.getElementById('editLifetime').value);
-    const used = parseFloat(document.getElementById('editUsed').value);
-    
-    if (!partName || isNaN(lifetime) || isNaN(used)) {
-        alert('Lengkapi semua data!');
-        return;
-    }
-    
-    if (used > lifetime) {
-        alert('Terpakai tidak boleh lebih besar dari Lifetime!');
-        return;
-    }
-    
-    const part = {
-        name: partName,
-        lifetime: lifetime,
-        used: used,
-        remaining: lifetime - used
-    };
-    
-    const index = document.getElementById('editIndex').value;
-    
-    if (index === '') {
-        spareParts[machineType].push(part);
-    } else {
-        spareParts[machineType][parseInt(index)] = part;
-    }
-    
-    saveDataToStorage();
-    updateSparePartTable();
-    closeSparePartModal();
-    alert('Spare part berhasil disimpan!');
-}
-
-function updateSparePartTable() {
-    const tbody = document.querySelector('#sparePartTable tbody');
-    tbody.innerHTML = '';
-    
-    let no = 1;
-    const typeNames = {
-        press: 'MESIN PRESS',
-        digester: 'DIGESTER',
-        sludge: 'SLUDGE CENTRIFUGE',
-        ripple: 'RIPPLE MILL'
-    };
-    
-    for (let type in spareParts) {
-        spareParts[type].forEach((part, index) => {
-            const status = part.remaining <= 0 ? 'CRITICAL' : 
-                          part.remaining <= part.lifetime * 0.2 ? 'WARNING' : 'NORMAL';
-            const statusClass = status === 'CRITICAL' ? 'danger' : 
-                               status === 'WARNING' ? 'warning' : 'normal';
-            
-            const row = `
-                <tr>
-                    <td>${no}</td>
-                    <td>${typeNames[type]}</td>
-                    <td>${part.name}</td>
-                    <td>${part.lifetime.toFixed(2)}</td>
-                    <td>${part.used.toFixed(2)}</td>
-                    <td>${part.remaining.toFixed(2)}</td>
-                    <td><span class="status-badge ${statusClass}">${status}</span></td>
-                    <td>${part.remaining <= 0 ? 'GANTI SEGERA' : 'Baik'}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm" onclick="editSparePart('${type}', ${index})">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteSparePart('${type}', ${index})">
-                            <i class="fas fa-trash"></i> Hapus
-                        </button>
-                    </td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-            no++;
-        });
-    }
-}
-
-function editSparePart(type, index) {
-    const part = spareParts[type][index];
-    document.getElementById('modalTitle').textContent = 'EDIT SPARE PART';
-    document.getElementById('editMachineType').value = type;
-    document.getElementById('editPartName').value = part.name;
-    document.getElementById('editLifetime').value = part.lifetime;
-    document.getElementById('editUsed').value = part.used;
-    document.getElementById('editIndex').value = index;
-    document.getElementById('editMachineTypeIndex').value = type;
-    document.getElementById('sparePartModal').style.display = 'block';
-}
-
-function deleteSparePart(type, index) {
-    if (confirm('Yakin ingin menghapus spare part ini?')) {
-        spareParts[type].splice(index, 1);
-        saveDataToStorage();
-        updateSparePartTable();
-        console.log('Spare part dihapus');
-    }
-}
-
-// ============================================
-// REPORT GENERATION
-// ============================================
-
-function previewReport() {
-    const period = document.getElementById('reportPeriod').value;
-    const asisten = document.getElementById('reportAsisten').value;
-    const reportNo = document.getElementById('reportNo').value;
-    
-    let html = `
-        <div style="border: 2px solid #000; padding: 20px; background: white;">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h2 style="margin: 0; font-size: 16px; font-weight: bold;">LAPORAN HM MESIN PKS</h2>
-                <p style="margin: 5px 0; font-size: 12px;">PT. BANGKITGIAT USAHA MANDIRI</p>
-            </div>
-            
-            <div style="margin-bottom: 15px; font-size: 12px;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                        <td style="width: 20%;">No. Laporan</td>
-                        <td style="width: 5%;">:</td>
-                        <td>${reportNo}</td>
-                    </tr>
-                    <tr>
-                        <td>Asisten</td>
-                        <td>:</td>
-                        <td>${asisten}</td>
-                    </tr>
-                    <tr>
-                        <td>Periode</td>
-                        <td>:</td>
-                        <td>${period}</td>
-                    </tr>
-                    <tr>
-                        <td>Tanggal Cetak</td>
-                        <td>:</td>
-                        <td>${new Date().toLocaleDateString('id-ID')}</td>
-                    </tr>
-                </table>
-            </div>
-            
-            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px;">
-                <thead>
-                    <tr style="border: 1px solid #000;">
-                        <th style="border: 1px solid #000; padding: 5px; text-align: center;">TANGGAL</th>
-                        <th style="border: 1px solid #000; padding: 5px; text-align: center;">MESIN</th>
-                        <th style="border: 1px solid #000; padding: 5px; text-align: center;">HM AWAL</th>
-                        <th style="border: 1px solid #000; padding: 5px; text-align: center;">HM AKHIR</th>
-                        <th style="border: 1px solid #000; padding: 5px; text-align: center;">SELISIH</th>
-                        <th style="border: 1px solid #000; padding: 5px; text-align: center;">STATUS</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    allData.forEach(data => {
-        const typeNames = {
-            press: 'PRESS',
-            digester: 'DIGESTER',
-            sludge: 'SLUDGE',
-            ripple: 'RIPPLE'
-        };
-        
-        html += `
-            <tr style="border: 1px solid #000;">
-                <td style="border: 1px solid #000; padding: 5px; text-align: center;">${data.tanggal}</td>
-                <td style="border: 1px solid #000; padding: 5px;">${typeNames[data.mesin]} #${data.unit}</td>
-                <td style="border: 1px solid #000; padding: 5px; text-align: right;">${data.hmAwal.toFixed(2)}</td>
-                <td style="border: 1px solid #000; padding: 5px; text-align: right;">${data.hmAkhir.toFixed(2)}</td>
-                <td style="border: 1px solid #000; padding: 5px; text-align: right;">${data.selisih.toFixed(2)}</td>
-                <td style="border: 1px solid #000; padding: 5px; text-align: center;">${data.status.toUpperCase()}</td>
-            </tr>
-        `;
-    });
-    
-    html += `
-                </tbody>
-            </table>
-            
-            <div style="margin-top: 30px; display: flex; justify-content: space-around; font-size: 11px;">
-                <div style="text-align: center;">
-                    <p style="margin-bottom: 40px;">Mengetahui,</p>
-                    <p style="margin: 0;">Kepala Unit</p>
-                </div>
-                <div style="text-align: center;">
-                    <p style="margin-bottom: 40px;">Operator,</p>
-                    <p style="margin: 0;">${asisten}</p>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('reportPreview').innerHTML = html;
-    console.log('Report preview ditampilkan');
-}
-
-function generateFDF() {
-    alert('Fitur PDF akan diaktifkan dengan library jsPDF. Silakan klik PREVIEW terlebih dahulu.');
-    previewReport();
-}
-
-function printReport() {
-    const preview = document.getElementById('reportPreview');
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write(preview.innerHTML);
-    printWindow.document.close();
-    printWindow.print();
-}
-
-function resetReport() {
-    document.getElementById('reportAsisten').value = 'Jonius Abertus';
-    document.getElementById('reportPeriod').value = 'daily';
-    document.getElementById('reportPreview').innerHTML = `
-        <div style="text-align: center; padding: 50px; color: #999;">
-            <i class="fas fa-file-pdf" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
-            Klik "PREVIEW" untuk melihat laporan
-        </div>
-    `;
-}
-
-// ============================================
-// LOCAL STORAGE MANAGEMENT
-// ============================================
-
-function saveDataToStorage() {
-    localStorage.setItem('machineData', JSON.stringify(machineData));
-    localStorage.setItem('spareParts', JSON.stringify(spareParts));
-    localStorage.setItem('allData', JSON.stringify(allData));
-    console.log('Data disimpan ke localStorage');
-}
-
-function loadDataFromStorage() {
-    const savedMachineData = localStorage.getItem('machineData');
-    const savedSpareParts = localStorage.getItem('spareParts');
-    const savedAllData = localStorage.getItem('allData');
-    
-    if (savedMachineData) {
-        machineData = JSON.parse(savedMachineData);
-    }
-    if (savedSpareParts) {
-        spareParts = JSON.parse(savedSpareParts);
-    }
-    if (savedAllData) {
-        allData = JSON.parse(savedAllData);
-    }
-    
-    console.log('Data dimuat dari localStorage');
-}
-
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-
-function exportData() {
-    const dataStr = JSON.stringify({
-        machineData: machineData,
-        spareParts: spareParts,
-        allData: allData
-    }, null, 2);
-    
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'hm-system-data-' + new Date().toISOString().split('T')[0] + '.json';
-    link.click();
-    console.log('Data diekspor');
-}
-
-function clearAllData() {
-    if (confirm('Apakah Anda yakin ingin menghapus SEMUA data? Tindakan ini tidak dapat dibatalkan!')) {
-        machineData = {
-            press: { 1: [], 2: [], 3: [], 4: [] },
-            digester: { 1: [], 2: [], 3: [], 4: [] },
-            sludge: { 3: [], 4: [], 5: [], 6: [], 7: [], 8: [] },
-            ripple: { 1: [], 2: [], 3: [] }
-        };
-        spareParts = {
-            press: [],
-            digester: [],
-            sludge: [],
-            ripple: []
-        };
-        allData = [];
-        localStorage.clear();
-        updateAllDisplays();
-        alert('Semua data telah dihapus!');
-        console.log('Semua data dihapus');
+    .logo-icon {
+        padding: 0 15px;
+        font-size: 18px;
+        height: 45px;
     }
 }
 
-console.log('Main.js loaded successfully!');
+@media print {
+    .main-header, .tabs-navigation, .button-group, .footer {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        break-inside: avoid;
+    }
+    
+    .hm-input-section {
+        background: none !important;
+        border: 1px solid #000 !important;
+    }
+}
