@@ -1,1 +1,496 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEM HM MESIN PKS - PT. Bangkitgiat Usaha Mandiri</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Condensed:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-code"></i>
+                        <span>CODING</span>
+                    </div>
+                    <div class="title-section">
+                        <h1>SISTEM PERHITUNGAN HM MESIN PKS</h1>
+                        <p class="subtitle">PT. BANGKITGIAT USAHA MANDIRI - By. Jonius Abertus</p>
+                    </div>
+                </div>
+                
+                <div class="header-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalHariIni">0</div>
+                        <div class="stat-label">HM HARI INI</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalCumulative">0</div>
+                        <div class="stat-label">TOTAL HM</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalMesin">0</div>
+                        <div class="stat-label">MESIN</div>
+                    </div>
+                </div>
+            </div>
+        </header>
 
+        <!-- Tabs Navigation -->
+        <div class="tabs-navigation">
+            <button class="tab-btn active" onclick="switchTab('inputHM')">
+                <i class="fas fa-calculator"></i> Input HM
+            </button>
+            <button class="tab-btn" onclick="switchTab('history')">
+                <i class="fas fa-history"></i> Riwayat
+            </button>
+            <button class="tab-btn" onclick="switchTab('report')">
+                <i class="fas fa-file-pdf"></i> Laporan FDF
+            </button>
+            <button class="tab-btn" onclick="switchTab('sparepart')">
+                <i class="fas fa-cogs"></i> Spare Part
+            </button>
+        </div>
+
+        <!-- Tab 1: Input HM -->
+        <div id="inputHM" class="tab-content active">
+            <div class="content-grid">
+                <!-- Input Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-calculator"></i> PERHITUNGAN HM MESIN</h3>
+                    </div>
+                    
+                    <!-- Machine Selection -->
+                    <div class="machine-selection">
+                        <h4 style="color: var(--primary); width: 100%; margin-bottom: 10px;">
+                            <i class="fas fa-server"></i> PILIH MESIN
+                        </h4>
+                        
+                        <!-- Press Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-compress-arrows-alt"></i> MESIN PRESS
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('press', 1)">
+                                    <i class="fas fa-cog"></i> Press #1
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('press', 2)">
+                                    <i class="fas fa-cog"></i> Press #2
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('press', 3)">
+                                    <i class="fas fa-cog"></i> Press #3
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('press', 4)">
+                                    <i class="fas fa-cog"></i> Press #4
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Digester Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-blender"></i> DIGESTER
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('digester', 1)">
+                                    <i class="fas fa-blender"></i> Digester #1
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('digester', 2)">
+                                    <i class="fas fa-blender"></i> Digester #2
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('digester', 3)">
+                                    <i class="fas fa-blender"></i> Digester #3
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('digester', 4)">
+                                    <i class="fas fa-blender"></i> Digester #4
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Sludge Centrifuge Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-sync-alt"></i> SLUDGE CENTRIFUGE
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('sludge', 3)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #3
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 4)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #4
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 5)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #5
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 6)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #6
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 7)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #7
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 8)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #8
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Ripple Mill Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-hammer"></i> RIPPLE MILL
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('ripple', 1)">
+                                    <i class="fas fa-hammer"></i> Ripple Mill #1
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('ripple', 2)">
+                                    <i class="fas fa-hammer"></i> Ripple Mill #2
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('ripple', 3)">
+                                    <i class="fas fa-hammer"></i> Ripple Mill #3
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="hm-input-section">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h4 style="color: var(--primary); margin-bottom: 10px;">FORMAT PERHITUNGAN HM</h4>
+                            <p style="color: #666; font-size: 14px;">HM Akhir - HM Awal = HM Hari Ini</p>
+                        </div>
+                        
+                        <div class="hm-input-grid">
+                            <div class="hm-input-group">
+                                <label id="machineLabel">
+                                    <i class="fas fa-industry"></i> MESIN TERPILIH
+                                </label>
+                                <input type="text" class="hm-input" id="selectedMachine" value="Pilih mesin terlebih dahulu" readonly>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-play-circle"></i> HM AWAL</label>
+                                <input type="number" class="hm-input" id="hmAwal" placeholder="Contoh: 7611.97" step="0.01" min="0">
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-stop-circle"></i> HM AKHIR</label>
+                                <input type="number" class="hm-input" id="hmAkhir" placeholder="Contoh: 7624.41" step="0.01" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Tanggal Input -->
+                        <div class="hm-input-group" style="margin-top: 20px;">
+                            <label><i class="fas fa-calendar-alt"></i> TANGGAL OPERASI</label>
+                            <input type="date" class="hm-input" id="operasiDate" value="">
+                        </div>
+                        
+                        <!-- Status Selection -->
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-flag"></i> STATUS MESIN</label>
+                            <div class="status-selection">
+                                <button class="status-btn normal active" onclick="selectStatus('normal')">NORMAL</button>
+                                <button class="status-btn warning" onclick="selectStatus('warning')">WARNING</button>
+                                <button class="status-btn danger" onclick="selectStatus('danger')">CRITICAL</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Keterangan -->
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-sticky-note"></i> KETERANGAN</label>
+                            <textarea class="hm-input" id="hmNotes" rows="2" placeholder="Catatan operasional..." style="text-align: left; height: auto;"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Results -->
+                    <div class="results-display">
+                        <div class="result-box">
+                            <div class="result-label">SELISIH HM</div>
+                            <div class="result-value" id="resultSelisih">0.00<span class="result-unit"> jam</span></div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">HM HARI INI</div>
+                            <div class="result-value" id="resultHariIni">0.00<span class="result-unit"> jam</span></div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">TOTAL HM</div>
+                            <div class="result-value" id="resultTotal">0.00<span class="result-unit"> jam</span></div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">MESIN AKTIF</div>
+                            <div class="result-value" id="resultMesin">0<span class="result-unit"> unit</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="hitungHM()">
+                            <i class="fas fa-calculator"></i> HITUNG HM
+                        </button>
+                        <button class="btn btn-success" onclick="simpanData()">
+                            <i class="fas fa-save"></i> SIMPAN DATA
+                        </button>
+                        <button class="btn btn-warning" onclick="hitungSemua()">
+                            <i class="fas fa-calculator"></i> HITUNG SEMUA
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-redo"></i> RESET
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-bar"></i> RINGKASAN MESIN</h3>
+                        <span class="card-badge" id="totalMesinBadge" style="background: var(--primary); color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px;">
+                            <i class="fas fa-server"></i> 0 Mesin
+                        </span>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table" id="summaryTable">
+                            <thead>
+                                <tr>
+                                    <th>NO</th>
+                                    <th>MESIN</th>
+                                    <th>UNIT</th>
+                                    <th>HM TERAKHIR</th>
+                                    <th>TOTAL HM</th>
+                                    <th>STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: History -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-history"></i> RIWAYAT HM HARIAN</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="filterMachine" class="hm-input" style="width: 150px;">
+                            <option value="all">Semua Mesin</option>
+                            <option value="press">Mesin Press</option>
+                            <option value="digester">Digester</option>
+                            <option value="sludge">Sludge Centrifuge</option>
+                            <option value="ripple">Ripple Mill</option>
+                        </select>
+                        <input type="date" id="filterDate" class="hm-input" style="width: 150px;">
+                        <button class="btn btn-secondary" onclick="filterHistory()" style="padding: 8px 15px;">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>TANGGAL</th>
+                                <th>MESIN</th>
+                                <th>HM AWAL</th>
+                                <th>HM AKHIR</th>
+                                <th>SELISIH</th>
+                                <th>TOTAL HM</th>
+                                <th>STATUS</th>
+                                <th>KETERANGAN</th>
+                                <th>AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Report FDF -->
+        <div id="report" class="tab-content">
+            <div class="content-grid">
+                <!-- Report Generator -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-file-pdf"></i> GENERATE LAPORAN FDF</h3>
+                    </div>
+                    
+                    <div class="hm-input-section">
+                        <h4 style="color: var(--primary); margin-bottom: 20px; text-align: center;">
+                            <i class="fas fa-print"></i> FORMAT LAPORAN HM MESIN PKS
+                        </h4>
+                        
+                        <div class="hm-input-grid">
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-calendar"></i> PERIODE LAPORAN</label>
+                                <select class="hm-input" id="reportPeriod">
+                                    <option value="daily">Harian</option>
+                                    <option value="weekly">Mingguan</option>
+                                    <option value="monthly">Bulanan</option>
+                                    <option value="custom">Kustom</option>
+                                </select>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-industry"></i> UNIT KERJA</label>
+                                <input type="text" class="hm-input" id="reportUnit" value="PKS PT. BANGKITGIAT USAHA MANDIRI" readonly>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-user"></i> ASISTEN</label>
+                                <input type="text" class="hm-input" id="reportAsisten" value="Jonius Abertus">
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-file-signature"></i> NO. LAPORAN</label>
+                                <input type="text" class="hm-input" id="reportNo" value="HM/PKS/<?php echo date('Y/m'); ?>/001">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="previewReport()">
+                            <i class="fas fa-eye"></i> PREVIEW
+                        </button>
+                        <button class="btn btn-success" onclick="generateFDF()">
+                            <i class="fas fa-file-pdf"></i> GENERATE PDF
+                        </button>
+                        <button class="btn btn-warning" onclick="printReport()">
+                            <i class="fas fa-print"></i> PRINT
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetReport()">
+                            <i class="fas fa-redo"></i> RESET
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Preview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-eye"></i> PREVIEW LAPORAN</h3>
+                    </div>
+                    
+                    <div id="reportPreview" style="padding: 20px; background: white; border-radius: var(--radius); min-height: 400px; border: 2px solid #E0E0E0; overflow-y: auto;">
+                        <!-- Preview akan ditampilkan di sini -->
+                        <div style="text-align: center; padding: 50px; color: #999;">
+                            <i class="fas fa-file-pdf" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                            Klik "PREVIEW" untuk melihat laporan
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Spare Part -->
+        <div id="sparepart" class="tab-content">
+            <div class="content-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-cogs"></i> MONITORING SPARE PART</h3>
+                        <button class="btn btn-primary" onclick="openAddSparePartModal()" style="padding: 8px 15px; font-size: 14px;">
+                            <i class="fas fa-plus"></i> TAMBAH
+                        </button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table" id="sparePartTable">
+                            <thead>
+                                <tr>
+                                    <th>NO</th>
+                                    <th>MESIN</th>
+                                    <th>SPARE PART</th>
+                                    <th>LIFETIME (HM)</th>
+                                    <th>TERPAKAI (HM)</th>
+                                    <th>SISA (HM)</th>
+                                    <th>STATUS</th>
+                                    <th>REKOMENDASI</th>
+                                    <th>AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Edit Spare Part -->
+        <div id="sparePartModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalTitle">EDIT SPARE PART</h3>
+                    <button class="close-modal" onclick="closeSparePartModal()">&times;</button>
+                </div>
+                
+                <div class="hm-input-section" style="margin: 0;">
+                    <div class="hm-input-grid">
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-industry"></i> JENIS MESIN</label>
+                            <select class="hm-input" id="editMachineType">
+                                <option value="press">Mesin Press</option>
+                                <option value="digester">Digester</option>
+                                <option value="sludge">Sludge Centrifuge</option>
+                                <option value="ripple">Ripple Mill</option>
+                            </select>
+                        </div>
+                        
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-cog"></i> NAMA SPARE PART</label>
+                            <input type="text" class="hm-input" id="editPartName" placeholder="Nama spare part...">
+                        </div>
+                        
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-clock"></i> LIFETIME (HM)</label>
+                            <input type="number" class="hm-input" id="editLifetime" placeholder="Masa pakai dalam HM..." step="1" min="1">
+                        </div>
+                        
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-hourglass-half"></i> TERPAKAI (HM)</label>
+                            <input type="number" class="hm-input" id="editUsed" placeholder="HM yang sudah terpakai..." step="1" min="0">
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="editIndex">
+                    <input type="hidden" id="editMachineTypeIndex">
+                    
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button class="btn btn-success" onclick="saveSparePart()">
+                            <i class="fas fa-save"></i> SIMPAN
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeSparePartModal()">
+                            <i class="fas fa-times"></i> BATAL
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>SISTEM PERHITUNGAN HM MESIN PKS - FORMAT FDF</strong></p>
+            <p>PT. BANGKITGIAT USAHA MANDIRI - By. Jonius Abertus</p>
+            <p class="signature">© 2024 Sistem Terintegrasi - HM Akhir - HM Awal = HM Hari Ini</p>
+        </div>
+    </div>
+
+    <!-- External JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Main JavaScript -->
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
