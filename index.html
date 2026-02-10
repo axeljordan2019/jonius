@@ -92,3 +92,42 @@ function gantiSpare(btn) {
 
 </body>
 </html>
+<br>
+<button onclick="exportCSV()">Export Report FDF (CSV)</button>
+
+<script>
+function exportCSV() {
+  let table = document.getElementById("hmTable");
+  let rows = [];
+
+  // Header
+  let headers = [];
+  for (let i = 0; i < table.rows[0].cells.length - 1; i++) {
+    headers.push(table.rows[0].cells[i].innerText);
+  }
+  rows.push(headers.join(","));
+
+  // Data
+  for (let i = 1; i < table.rows.length; i++) {
+    let row = [];
+    for (let j = 0; j < table.rows[i].cells.length - 1; j++) {
+      let cell = table.rows[i].cells[j];
+      if (cell.children.length > 0) {
+        row.push(cell.children[0].value || cell.innerText);
+      } else {
+        row.push(cell.innerText);
+      }
+    }
+    rows.push(row.join(","));
+  }
+
+  // Buat file CSV
+  let csvContent = "data:text/csv;charset=utf-8," + rows.join("\n");
+  let encodedUri = encodeURI(csvContent);
+  let link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "Report_FDF_HM.csv");
+  document.body.appendChild(link);
+  link.click();
+}
+</script>
