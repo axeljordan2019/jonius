@@ -1,355 +1,2980 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>HM PMKS – FINAL</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<style>
-:root{
---blue:#0d47a1;--blue2:#1565c0;
---bg:#f4f6f8;--card:#fff;
---n:#2e7d32;--w:#f9a825;--d:#c62828;
-}
-*{box-sizing:border-box}
-body{margin:0;font-family:Poppins;background:var(--bg)}
-header{background:var(--blue);color:#fff;padding:14px;text-align:center}
-nav{display:flex;background:#fff}
-nav button{flex:1;padding:12px;border:none;background:#fff;font-weight:600}
-nav button.active{background:var(--blue2);color:#fff}
-.container{padding:14px}
-.card{background:var(--card);padding:14px;border-radius:6px;margin-bottom:14px}
-input,select,button{width:100%;padding:8px;margin:6px 0}
-button.primary{background:var(--blue);color:#fff;border:none}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ccc;padding:6px;text-align:center}
-.status-n{color:var(--n);font-weight:700}
-.status-w{color:var(--w);font-weight:700}
-.status-d{color:var(--d);font-weight:700}
-.hidden{display:none}
-</style>
-</head>
-
-<body>
-<header>
-<h2>SISTEM HM PMKS – FINAL</h2>
-<small>Offline • Audit-Safe • Industrial</small>
-</header>
-
-<nav>
-<button class="active" onclick="tab('dash')">Dashboard</button>
-<button onclick="tab('hm')">Input HM</button>
-<button onclick="tab('his')">Riwayat</button>
-<button onclick="tab('sp')">Spare Part</button>
-<button onclick="tab('rep')">Laporan</button>
-</nav>
-
-<div class="container">
-
-<div id="dash" class="card"></div>
-<div id="hm" class="card hidden"></div>
-<div id="his" class="card hidden"></div>
-<div id="sp" class="card hidden"></div>
-<div id="rep" class="card hidden"></div>
-
-</div>
-
-<script>
-/* ================= MASTER DATA ================= */
-const MESIN=[
-"Press No. 1","Press No. 2","Press No. 3","Press No. 4",
-"Digester No. 1","Digester No. 2","Digester No. 3","Digester No. 4",
-"Sludge Centrifuge No. 3","Sludge Centrifuge No. 4","Sludge Centrifuge No. 5",
-"Sludge Centrifuge No. 6","Sludge Centrifuge No. 7","Sludge Centrifuge No. 8",
-"Ripple Mill No. 1","Ripple Mill No. 2","Ripple Mill No. 3"
-];
-
-let hm=JSON.parse(localStorage.getItem("HM"))||{};
-let his=JSON.parse(localStorage.getItem("HIS"))||[];
-let sp=JSON.parse(localStorage.getItem("SP"))||[];
-
-/* init hm */
-MESIN.forEach(m=>{ if(!hm[m]) hm[m]={awal:0,total:0} });
-
-/* ================= TAB ================= */
-function tab(id){
-document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
-document.getElementById(id).classList.remove('hidden');
-document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-event.target.classList.add('active');
-render();
-}
-<script>
-/* ================= DASHBOARD ================= */
-function renderDashboard(){
-let totalHari=0, critical=0;
-let html=`<h3>Dashboard</h3><table>
-<tr><th>Mesin</th><th>Total HM</th><th>Status</th></tr>`;
-
-MESIN.forEach(m=>{
-    let total=hm[m].total||0;
-    let status="NORMAL";
-    sp.filter(s=>s.mesin===m).forEach(s=>{
-        let p=(s.terpakai/s.lifetime)*100;
-        if(p>=90){status="CRITICAL";critical++;}
-        else if(p>=75 && status!=="CRITICAL") status="WARNING";
-    });
-    html+=`<tr>
-    <td>${m}</td>
-    <td>${total.toFixed(2)}</td>
-    <td class="status-${status=="NORMAL"?"n":status=="WARNING"?"w":"d"}">${status}</td>
-    </tr>`;
-});
-html+=`</table>`;
-if(critical>0){
-    alert("⚠️ PERINGATAN: Ada spare part CRITICAL!");
-}
-dash.innerHTML=html;
-}
-
-/* ================= INPUT HM ================= */
-function renderHM(){
-let opt=MESIN.map(m=>`<option>${m}</option>`).join("");
-hm.innerHTML=`
-<h3>Input HM Mesin</h3>
-<select id="mesinHM">${opt}</select>
-
-<label>HM Awal</label>
-<input id="hmAwal" type="number" step="0.01">
-
-<label>HM Akhir</label>
-<input id="hmAkhir" type="number" step="0.01">
-
-<label>HM Hari Ini</label>
-<input id="hmHari" type="number" step="0.01">
-
-<button class="primary" onclick="simpanHM()">Simpan HM</button>
-
-<hr>
-<h4>Spare Part Mesin</h4>
-<table>
-<tr><th>Spare</th><th>Life</th><th>Terpakai</th><th>Sisa</th><th>Status</th></tr>
-<tbody id="spareHM"></tbody>
-</table>
-`;
-
-mesinHM.onchange=loadHM;
-hmAwal.oninput=autoHitung;
-hmAkhir.oninput=autoHitung;
-loadHM();
-}
-
-function loadHM(){
-let m=mesinHM.value;
-hmAwal.value=hm[m].awal.toFixed(2);
-hmAkhir.value="";
-hmHari.value="";
-renderSpareHM();
-}
-
-function autoHitung(){
-if(hmAwal.value && hmAkhir.value){
-    hmHari.value=(hmAkhir.value-hmAwal.value).toFixed(2);
-}
-}
-
-/* ================= SIMPAN HM (LOCKED) ================= */
-function simpanHM(){
-let m=mesinHM.value;
-let awal=+hmAwal.value;
-let akhir=+hmAkhir.value;
-let hari=+hmHari.value;
-
-if(isNaN(awal)||isNaN(akhir)||isNaN(hari)) return alert("Data HM tidak valid");
-if(!confirm("Simpan HM? Data tidak bisa diubah.")) return;
-
-/* lock record */
-his.push({
-tgl:new Date().toLocaleDateString(),
-mesin:m,awal,akhir,hari,locked:true
-});
-
-/* update hm */
-hm[m].awal=akhir;
-hm[m].total=(hm[m].total||0)+hari;
-
-/* sinkron spare part */
-sp.forEach(s=>{
-if(s.mesin===m) s.terpakai+=hari;
-});
-
-saveAll();
-render();
-}
-
-/* ================= SPARE PART ================= */
-function renderSpareHM(){
-let m=mesinHM.value;
-spareHM.innerHTML="";
-sp.filter(s=>s.mesin===m).forEach(s=>{
-let sisa=s.lifetime-s.terpakai;
-let p=(s.terpakai/s.lifetime)*100;
-let st=p>=90?"CRITICAL":p>=75?"WARNING":"NORMAL";
-spareHM.innerHTML+=`
-<tr>
-<td>${s.nama}</td>
-<td>${s.lifetime}</td>
-<td>${s.terpakai.toFixed(2)}</td>
-<td>${sisa.toFixed(2)}</td>
-<td class="status-${st=="NORMAL"?"n":st=="WARNING"?"w":"d"}">${st}</td>
-</tr>`;
-});
-}
-
-/* ================= RIWAYAT ================= */
-function renderHistory(){
-hisDiv.innerHTML="<h3>Riwayat HM</h3><table><tr><th>Tgl</th><th>Mesin</th><th>Awal</th><th>Akhir</th><th>HM</th></tr>"+
-his.map(h=>`<tr><td>${h.tgl}</td><td>${h.mesin}</td>
-<td>${h.awal}</td><td>${h.akhir}</td><td>${h.hari}</td></tr>`).join("")+"</table>";
-}
-
-/* ================= PDF FDF ================= */
-function renderReport(){
-rep.innerHTML=`<h3>Laporan FDF</h3>
-<button class="primary" onclick="pdf()">Generate PDF</button>`;
-}
-
-function pdf(){
-const {jsPDF}=window.jspdf;
-let p=new jsPDF();
-p.text("LAPORAN HM PMKS",10,10);
-let y=20;
-his.forEach(h=>{
-p.text(`${h.tgl} | ${h.mesin} | ${h.hari} HM`,10,y);
-y+=7;
-});
-p.text("Tanda Tangan,",10,y+15);
-p.save("Laporan_HM_PMKS.pdf");
-}
-
-/* ================= BACKUP & EXPORT ================= */
-function saveAll(){
-localStorage.setItem("HM",JSON.stringify(hm));
-localStorage.setItem("HIS",JSON.stringify(his));
-localStorage.setItem("SP",JSON.stringify(sp));
-}
-
-function exportCSV(){
-let csv="Tanggal,Mesin,HM Awal,HM Akhir,HM Hari\n";
-his.forEach(h=>{
-csv+=`${h.tgl},${h.mesin},${h.awal},${h.akhir},${h.hari}\n`;
-});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(new Blob([csv]));
-a.download="HM_PMKS.csv";
-a.click();
-}
-
-/* ================= RENDER ================= */
-function render(){
-renderDashboard();
-renderHM();
-renderHistory();
-renderReport();
-}
-render();
-</script>
-<div id="hm" class="card hidden">
-<h3>Input HM Mesin</h3>
-
-<select id="mesinHM"></select>
-
-<label>HM Awal</label>
-<input type="number" id="hmAwal" step="0.01">
-
-<label>HM Akhir</label>
-<input type="number" id="hmAkhir" step="0.01">
-
-<label>HM Hari Ini</label>
-<input type="number" id="hmHari" step="0.01">
-
-<button class="primary" onclick="simpanHM()">Simpan HM</button>
-
-<hr>
-<h4>Spare Part Mesin</h4>
-<table>
-<thead>
-<tr>
-<th>Spare Part</th>
-<th>Lifetime</th>
-<th>Terpakai</th>
-<th>Sisa</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody id="spareHMTable"></tbody>
-</table>
-</div>
-<script>
-hmAwal.oninput = autoHitung;
-hmAkhir.oninput = autoHitung;
-
-function autoHitung(){
-    if(hmAwal.value && hmAkhir.value){
-        hmHari.value = (hmAkhir.value - hmAwal.value).toFixed(2);
-    }
-}
-</script>
-function simpanHM(){
-    let mesin = mesinHM.value;
-    let awal = parseFloat(hmAwal.value);
-    let akhir = parseFloat(hmAkhir.value);
-    let hari  = parseFloat(hmHari.value);
-
-    if(isNaN(awal)||isNaN(akhir)||isNaN(hari)){
-        alert("Lengkapi data HM");
-        return;
-    }
-
-    his.push({
-        tgl: new Date().toLocaleDateString(),
-        mesin, awal, akhir, hari
-    });
-
-    hm[mesin].awal = akhir;
-    hm[mesin].total += hari;
-
-    /* SINKRON KE SPARE PART */
-    sp.forEach(s=>{
-        if(s.mesin === mesin){
-            s.terpakai += hari;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEM HM MESIN PKS - PT. Bangkitgiat Usaha Mandiri</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Condensed:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #0D47A1;
+            --secondary: #FF6F00;
+            --accent: #2196F3;
+            --dark-blue: #1565C0;
+            --light-blue: #E3F2FD;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --background: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text: #263238;
+            --border: #E0E0E0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 8px;
         }
-    });
 
-    localStorage.setItem("HM",JSON.stringify(hm));
-    localStorage.setItem("HIS",JSON.stringify(his));
-    localStorage.setItem("SP",JSON.stringify(sp));
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
 
-    alert("HM berhasil disimpan");
-    render();
-}
-function renderSpareHM(){
-    let mesin = mesinHM.value;
-    spareHMTable.innerHTML = "";
+        body {
+            background: linear-gradient(135deg, #ECEFF1 0%, #CFD8DC 100%);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 15px;
+        }
 
-    sp.filter(s=>s.mesin===mesin).forEach(s=>{
-        let sisa = s.lifetime - s.terpakai;
-        let p = (s.terpakai / s.lifetime) * 100;
-        let st = p>=90?"CRITICAL":p>=75?"WARNING":"NORMAL";
+        /* PWA Install Prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
 
-        spareHMTable.innerHTML += `
-        <tr>
-            <td>${s.nama}</td>
-            <td>${s.lifetime}</td>
-            <td>${s.terpakai.toFixed(2)}</td>
-            <td>${sisa.toFixed(2)}</td>
-            <td class="status-${st=='NORMAL'?'n':st=='WARNING'?'w':'d'}">${st}</td>
-        </tr>`;
-    });
-}
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
 
-mesinHM.onchange = renderSpareHM;
+        .main-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark-blue) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            background: white;
+            color: var(--primary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .title-section h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .title-section .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            font-family: 'Roboto Condensed', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Tabs Navigation */
+        .tabs-navigation {
+            display: flex;
+            background: white;
+            border-radius: var(--radius);
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 180px;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 8px rgba(13, 71, 161, 0.2);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: var(--light-blue);
+            color: var(--primary);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+
+        .card-title {
+            color: var(--primary);
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Machine Selection */
+        .machine-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #F8F9FA;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .machine-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .machine-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .machine-btn:hover:not(.active) {
+            background: var(--light-blue);
+            border-color: var(--accent);
+            color: var(--primary);
+        }
+
+        .machine-btn.warning {
+            border-color: var(--warning);
+            background: #FFF3E0;
+        }
+
+        .machine-btn.danger {
+            border-color: var(--danger);
+            background: #FFEBEE;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+
+        /* HM Input Section */
+        .hm-input-section {
+            background: linear-gradient(135deg, #E3F2FD 0%, #F5F7FA 100%);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #BBDEFB;
+        }
+
+        .hm-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .hm-input-group {
+            margin-bottom: 15px;
+        }
+
+        .hm-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hm-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            background: white;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .hm-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+            outline: none;
+        }
+
+        /* Results Display */
+        .results-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .result-box {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary);
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .result-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .result-unit {
+            font-size: 16px;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            padding: 15px 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .data-table th:last-child {
+            border-right: none;
+        }
+
+        .data-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            vertical-align: middle;
+            border-right: 1px solid #f0f0f0;
+        }
+
+        .data-table td:last-child {
+            border-right: none;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #F8F9FA;
+        }
+
+        .data-table tr:hover {
+            background: var(--light-blue);
+        }
+
+        /* Button Styles */
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark-blue) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(13, 71, 161, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #2E7D32 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #EF6C00 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 152, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #607D8B 0%, #455A64 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(96, 125, 139, 0.3);
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.success { border-left-color: var(--success); }
+        .notification.warning { border-left-color: var(--warning); }
+        .notification.danger { border-left-color: var(--danger); }
+
+        /* Spare Part Input Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 2px solid var(--light-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 2px solid var(--light-blue);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* Spare Part Input Row */
+        .sparepart-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .sparepart-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .add-sparepart-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .remove-sparepart-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background: #E0E0E0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-normal { background: var(--success); }
+        .progress-warning { background: var(--warning); }
+        .progress-danger { background: var(--danger); }
+
+        /* Footer */
+        .footer {
+            background: var(--dark-blue);
+            color: white;
+            padding: 25px;
+            border-radius: var(--radius);
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .footer p {
+            margin-bottom: 10px;
+        }
+
+        .signature {
+            font-style: italic;
+            color: #BBDEFB;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .header-stats {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .tabs-navigation {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                min-width: 100%;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .machine-selection {
+                flex-direction: column;
+            }
+            
+            .machine-btn {
+                min-width: 100%;
+            }
+            
+            .hm-input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-display {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .install-prompt {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .sparepart-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        @media print {
+            .main-header, .tabs-navigation, .button-group, .footer {
+                display: none !important;
+            }
+            
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #000 !important;
+                break-inside: avoid;
+            }
+            
+            .hm-input-section {
+                background: none !important;
+                border: 1px solid #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- PWA Install Prompt -->
+    <div class="install-prompt" id="installPrompt" style="display: none;">
+        <i class="fas fa-download" style="font-size: 24px;"></i>
+        <div>
+            <strong>Install Aplikasi HM Mesin PKS</strong>
+            <p style="font-size: 12px; margin-top: 5px;">Akses cepat dari layar utama</p>
+        </div>
+        <button onclick="installApp()" class="btn btn-success" style="padding: 8px 15px; font-size: 14px;">
+            <i class="fas fa-plus"></i> Install
+        </button>
+        <button onclick="dismissPrompt()" style="background: transparent; border: none; color: white; cursor: pointer;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Modal Input Spare Part -->
+    <div class="modal" id="sparepartModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="card-title"><i class="fas fa-cogs"></i> INPUT SPARE PART</h3>
+                <button onclick="closeModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="hm-input-section">
+                    <h4 style="color: var(--primary); margin-bottom: 15px; text-align: center;">
+                        <i class="fas fa-tools"></i> INPUT DATA SPARE PART
+                    </h4>
+                    
+                    <div class="hm-input-group">
+                        <label><i class="fas fa-industry"></i> MESIN</label>
+                        <input type="text" class="hm-input" id="modalMachine" readonly>
+                    </div>
+                    
+                    <div id="sparepartInputs">
+                        <div class="sparepart-row">
+                            <input type="text" class="sparepart-input" placeholder="Nama Spare Part" oninput="validateSparePart(this)">
+                            <input type="number" class="sparepart-input" placeholder="Lifetime (HM)" min="1" step="1">
+                            <input type="number" class="sparepart-input" placeholder="Terpakai (HM)" min="0" step="1">
+                            <button class="remove-sparepart-btn" onclick="removeSparePartRow(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button class="add-sparepart-btn" onclick="addSparePartRow()" style="margin-top: 15px;">
+                        <i class="fas fa-plus"></i> Tambah Spare Part
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+                <button class="btn btn-success" onclick="saveSparePart()">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <div class="title-section">
+                        <h1>SISTEM PERHITUNGAN HM MESIN PKS</h1>
+                        <p class="subtitle">PT. BANGKITGIAT USAHA MANDIRI - By. Jonius Abertus</p>
+                    </div>
+                </div>
+                
+                <div class="header-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalHariIni">0</div>
+                        <div class="stat-label">HM HARI INI</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalCumulative">0</div>
+                        <div class="stat-label">TOTAL HM</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalMesin">19</div>
+                        <div class="stat-label">MESIN</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-navigation">
+            <button class="tab-btn active" onclick="switchTab('inputHM')">
+                <i class="fas fa-calculator"></i> Input HM
+            </button>
+            <button class="tab-btn" onclick="switchTab('history')">
+                <i class="fas fa-history"></i> Riwayat
+            </button>
+            <button class="tab-btn" onclick="switchTab('report')">
+                <i class="fas fa-file-pdf"></i> Laporan FDF
+            </button>
+            <button class="tab-btn" onclick="switchTab('sparepart')">
+                <i class="fas fa-cogs"></i> Spare Part
+            </button>
+        </div>
+
+        <!-- Tab 1: Input HM -->
+        <div id="inputHM" class="tab-content active">
+            <div class="content-grid">
+                <!-- Input Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-calculator"></i> PERHITUNGAN HM MESIN</h3>
+                    </div>
+                    
+                    <!-- Machine Selection -->
+                    <div class="machine-selection">
+                        <h4 style="color: var(--primary); width: 100%; margin-bottom: 10px;">
+                            <i class="fas fa-server"></i> PILIH MESIN
+                        </h4>
+                        
+                        <!-- Press Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-compress-arrows-alt"></i> MESIN PRESS
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('press', 1)">
+                                    <i class="fas fa-cog"></i> Press #1
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('press', 2)">
+                                    <i class="fas fa-cog"></i> Press #2
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('press', 3)">
+                                    <i class="fas fa-cog"></i> Press #3
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('press', 4)">
+                                    <i class="fas fa-cog"></i> Press #4
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Digester Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-blender"></i> DIGESTER
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('digester', 1)">
+                                    <i class="fas fa-blender"></i> Digester #1
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('digester', 2)">
+                                    <i class="fas fa-blender"></i> Digester #2
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('digester', 3)">
+                                    <i class="fas fa-blender"></i> Digester #3
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('digester', 4)">
+                                    <i class="fas fa-blender"></i> Digester #4
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Sludge Centrifuge Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-sync-alt"></i> SLUDGE CENTRIFUGE
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('sludge', 3)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #3
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 4)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #4
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 5)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #5
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 6)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #6
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 7)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #7
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 8)">
+                                    <i class="fas fa-sync-alt"></i> Sludge #8
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Ripple Mill Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-hammer"></i> RIPPLE MILL
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('ripple', 1)">
+                                    <i class="fas fa-hammer"></i> Ripple Mill #1
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('ripple', 2)">
+                                    <i class="fas fa-hammer"></i> Ripple Mill #2
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('ripple', 3)">
+                                    <i class="fas fa-hammer"></i> Ripple Mill #3
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="hm-input-section">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h4 style="color: var(--primary); margin-bottom: 10px;">FORMAT PERHITUNGAN HM</h4>
+                            <p style="color: #666; font-size: 14px;">HM Akhir - HM Awal = HM Hari Ini</p>
+                        </div>
+                        
+                        <div class="hm-input-grid">
+                            <div class="hm-input-group">
+                                <label id="machineLabel">
+                                    <i class="fas fa-industry"></i> MESIN TERPILIH
+                                </label>
+                                <input type="text" class="hm-input" id="selectedMachine" value="Pilih mesin terlebih dahulu" readonly>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-play-circle"></i> HM AWAL (Terakhir)</label>
+                                <input type="number" class="hm-input" id="hmAwal" placeholder="Diambil dari HM akhir sebelumnya" step="0.01" min="0" readonly>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-stop-circle"></i> HM AKHIR (Baru)</label>
+                                <input type="number" class="hm-input" id="hmAkhir" placeholder="Masukkan HM akhir baru" step="0.01" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Tanggal Input -->
+                        <div class="hm-input-group" style="margin-top: 20px;">
+                            <label><i class="fas fa-calendar-alt"></i> TANGGAL OPERASI</label>
+                            <input type="date" class="hm-input" id="operasiDate" value="">
+                        </div>
+                        
+                        <!-- Shift -->
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-clock"></i> SHIFT</label>
+                            <select class="hm-input" id="operasiShift">
+                                <option value="Shift 1 (06:00-14:00)">Shift 1 (06:00-14:00)</option>
+                                <option value="Shift 2 (14:00-22:00)">Shift 2 (14:00-22:00)</option>
+                                <option value="Shift 3 (22:00-06:00)">Shift 3 (22:00-06:00)</option>
+                                <option value="Full Day">Full Day (24 Jam)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Keterangan -->
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-sticky-note"></i> KETERANGAN</label>
+                            <textarea class="hm-input" id="hmNotes" rows="2" placeholder="Catatan operasional..." style="text-align: left; height: auto;"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Results -->
+                    <div class="results-display">
+                        <div class="result-box">
+                            <div class="result-label">HM HARI INI</div>
+                            <div class="result-value" id="resultHariIni">0.00<span class="result-unit"> jam</span></div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">HM KUMULATIF</div>
+                            <div class="result-value" id="resultKumulatif">0.00<span class="result-unit"> jam</span></div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">MESIN INI</div>
+                            <div class="result-value" id="resultMesinHM">0.00<span class="result-unit"> jam</span></div>
+                        </div>
+                        <div class="result-box">
+                            <div class="result-label">STATUS</div>
+                            <div class="result-value" id="resultStatus" style="font-size: 20px; color: #666;">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="hitungHM()">
+                            <i class="fas fa-calculator"></i> HITUNG HM
+                        </button>
+                        <button class="btn btn-success" onclick="simpanData()">
+                            <i class="fas fa-save"></i> SIMPAN DATA
+                        </button>
+                        <button class="btn btn-warning" onclick="hitungSemua()">
+                            <i class="fas fa-calculator"></i> HITUNG SEMUA
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-redo"></i> RESET
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-bar"></i> RINGKASAN PER MESIN</h3>
+                        <span class="card-badge" style="background: var(--primary); color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px;">
+                            <i class="fas fa-server"></i> <span id="totalMesinCounter">19</span> Mesin
+                        </span>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table" id="summaryTable">
+                            <thead>
+                                <tr>
+                                    <th>NO</th>
+                                    <th>MESIN</th>
+                                    <th>HM TERAKHIR</th>
+                                    <th>HM HARI INI</th>
+                                    <th>TOTAL HM MESIN</th>
+                                    <th>STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: History -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-history"></i> RIWAYAT HM HARIAN</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="filterMachine" class="hm-input" style="width: 150px;">
+                            <option value="all">Semua Mesin</option>
+                            <option value="press">Mesin Press</option>
+                            <option value="digester">Digester</option>
+                            <option value="sludge">Sludge Centrifuge</option>
+                            <option value="ripple">Ripple Mill</option>
+                        </select>
+                        <input type="date" id="filterDate" class="hm-input" style="width: 150px;">
+                        <button class="btn btn-secondary" onclick="filterHistory()" style="padding: 8px 15px;">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <button class="btn btn-warning" onclick="exportHistory()" style="padding: 8px 15px;">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>TANGGAL</th>
+                                <th>MESIN</th>
+                                <th>SHIFT</th>
+                                <th>HM AWAL</th>
+                                <th>HM AKHIR</th>
+                                <th>HM HARI INI</th>
+                                <th>TOTAL HM</th>
+                                <th>KETERANGAN</th>
+                                <th>AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Report FDF -->
+        <div id="report" class="tab-content">
+            <div class="content-grid">
+                <!-- Report Generator -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-file-pdf"></i> GENERATE LAPORAN FDF</h3>
+                    </div>
+                    
+                    <div class="hm-input-section">
+                        <h4 style="color: var(--primary); margin-bottom: 20px; text-align: center;">
+                            <i class="fas fa-print"></i> FORMAT LAPORAN HM MESIN PKS
+                        </h4>
+                        
+                        <div class="hm-input-grid">
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-calendar"></i> PERIODE LAPORAN</label>
+                                <select class="hm-input" id="reportPeriod">
+                                    <option value="daily">Harian</option>
+                                    <option value="weekly">Mingguan</option>
+                                    <option value="monthly">Bulanan</option>
+                                    <option value="custom">Kustom</option>
+                                </select>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-industry"></i> UNIT KERJA</label>
+                                <input type="text" class="hm-input" id="reportUnit" value="PKS PT. BANGKITGIAT USAHA MANDIRI" readonly>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-user"></i> PENANGGUNG JAWAB</label>
+                                <input type="text" class="hm-input" id="reportPJ" value="Jonius Abertus">
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-file-signature"></i> NO. LAPORAN</label>
+                                <input type="text" class="hm-input" id="reportNo" value="HM/PKS/2024/001">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="previewReport()">
+                            <i class="fas fa-eye"></i> PREVIEW
+                        </button>
+                        <button class="btn btn-success" onclick="generateFDF()">
+                            <i class="fas fa-file-pdf"></i> GENERATE PDF
+                        </button>
+                        <button class="btn btn-warning" onclick="printReport()">
+                            <i class="fas fa-print"></i> PRINT
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            <i class="fas fa-database"></i> EXPORT DATA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Preview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-eye"></i> PREVIEW LAPORAN</h3>
+                    </div>
+                    
+                    <div id="reportPreview" style="padding: 20px; background: white; border-radius: var(--radius); min-height: 400px; border: 2px solid #E0E0E0; overflow-y: auto;">
+                        <!-- Preview akan ditampilkan di sini -->
+                        <div style="text-align: center; padding: 50px; color: #999;">
+                            <i class="fas fa-file-pdf" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                            Klik "PREVIEW" untuk melihat laporan
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Spare Part -->
+        <div id="sparepart" class="tab-content">
+            <div class="content-grid">
+                <!-- Spare Part Management -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-cogs"></i> INPUT SPARE PART MANUAL</h3>
+                        <span class="card-badge" style="background: var(--primary); color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px;">
+                            <i class="fas fa-tools"></i> Input Manual
+                        </span>
+                    </div>
+                    
+                    <div class="hm-input-section">
+                        <h4 style="color: var(--primary); margin-bottom: 15px; text-align: center;">
+                            <i class="fas fa-industry"></i> PILIH MESIN UNTUK INPUT SPARE PART
+                        </h4>
+                        
+                        <div class="machine-selection">
+                            <!-- Press Selection -->
+                            <div style="width: 100%;">
+                                <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                    <i class="fas fa-compress-arrows-alt"></i> MESIN PRESS
+                                </h5>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('press', 1)">
+                                        <i class="fas fa-cog"></i> Press #1
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('press', 2)">
+                                        <i class="fas fa-cog"></i> Press #2
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('press', 3)">
+                                        <i class="fas fa-cog"></i> Press #3
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('press', 4)">
+                                        <i class="fas fa-cog"></i> Press #4
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Digester Selection -->
+                            <div style="width: 100%;">
+                                <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                    <i class="fas fa-blender"></i> DIGESTER
+                                </h5>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('digester', 1)">
+                                        <i class="fas fa-blender"></i> Digester #1
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('digester', 2)">
+                                        <i class="fas fa-blender"></i> Digester #2
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('digester', 3)">
+                                        <i class="fas fa-blender"></i> Digester #3
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('digester', 4)">
+                                        <i class="fas fa-blender"></i> Digester #4
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Sludge Centrifuge Selection -->
+                            <div style="width: 100%;">
+                                <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                    <i class="fas fa-sync-alt"></i> SLUDGE CENTRIFUGE
+                                </h5>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('sludge', 3)">
+                                        <i class="fas fa-sync-alt"></i> Sludge #3
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('sludge', 4)">
+                                        <i class="fas fa-sync-alt"></i> Sludge #4
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('sludge', 5)">
+                                        <i class="fas fa-sync-alt"></i> Sludge #5
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('sludge', 6)">
+                                        <i class="fas fa-sync-alt"></i> Sludge #6
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('sludge', 7)">
+                                        <i class="fas fa-sync-alt"></i> Sludge #7
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('sludge', 8)">
+                                        <i class="fas fa-sync-alt"></i> Sludge #8
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Ripple Mill Selection -->
+                            <div style="width: 100%;">
+                                <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                    <i class="fas fa-hammer"></i> RIPPLE MILL
+                                </h5>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('ripple', 1)">
+                                        <i class="fas fa-hammer"></i> Ripple Mill #1
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('ripple', 2)">
+                                        <i class="fas fa-hammer"></i> Ripple Mill #2
+                                    </button>
+                                    <button class="machine-btn" onclick="selectMachineForSparepart('ripple', 3)">
+                                        <i class="fas fa-hammer"></i> Ripple Mill #3
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 20px; padding: 15px; background: var(--light-blue); border-radius: var(--radius);">
+                            <h5 style="color: var(--primary); margin-bottom: 10px;">
+                                <i class="fas fa-info-circle"></i> PETUNJUK INPUT
+                            </h5>
+                            <p style="font-size: 13px; color: #666; margin-bottom: 5px;">
+                                1. Pilih mesin untuk menginput spare part
+                            </p>
+                            <p style="font-size: 13px; color: #666; margin-bottom: 5px;">
+                                2. Input nama spare part sesuai kondisi lapangan
+                            </p>
+                            <p style="font-size: 13px; color: #666;">
+                                3. Isi lifetime dan HM terpakai berdasarkan data aktual
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="openSparepartInput()" id="btnOpenSparepart" disabled>
+                            <i class="fas fa-plus"></i> INPUT SPARE PART
+                        </button>
+                        <button class="btn btn-success" onclick="refreshSparepartTable()">
+                            <i class="fas fa-sync-alt"></i> REFRESH DATA
+                        </button>
+                        <button class="btn btn-warning" onclick="exportSparepartData()">
+                            <i class="fas fa-download"></i> EXPORT DATA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Spare Part Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-table"></i> DATA SPARE PART TERINPUT</h3>
+                        <span class="card-badge" style="background: var(--primary); color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px;">
+                            <i class="fas fa-list"></i> <span id="sparePartCounter">0</span> Items
+                        </span>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table" id="sparePartTable">
+                            <thead>
+                                <tr>
+                                    <th>MESIN</th>
+                                    <th>SPARE PART</th>
+                                    <th>LIFETIME (HM)</th>
+                                    <th>TERPAKAI (HM)</th>
+                                    <th>SISA (HM)</th>
+                                    <th>%</th>
+                                    <th>STATUS</th>
+                                    <th>AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #F8F9FA; border-radius: var(--radius); border: 1px solid var(--border);">
+                        <h5 style="color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-chart-pie"></i> RINGKASAN STATUS
+                        </h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                            <div style="text-align: center; padding: 10px; background: white; border-radius: var(--radius); border-left: 4px solid #4CAF50;">
+                                <div style="font-size: 20px; font-weight: bold; color: #4CAF50;" id="statusNormal">0</div>
+                                <div style="font-size: 12px; color: #666;">NORMAL</div>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: white; border-radius: var(--radius); border-left: 4px solid #FF9800;">
+                                <div style="font-size: 20px; font-weight: bold; color: #FF9800;" id="statusWarning">0</div>
+                                <div style="font-size: 12px; color: #666;">WARNING</div>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: white; border-radius: var(--radius); border-left: 4px solid #F44336;">
+                                <div style="font-size: 20px; font-weight: bold; color: #F44336;" id="statusCritical">0</div>
+                                <div style="font-size: 12px; color: #666;">CRITICAL</div>
+                            </div>
+                            <div style="text-align: center; padding: 10px; background: white; border-radius: var(--radius); border-left: 4px solid #2196F3;">
+                                <div style="font-size: 20px; font-weight: bold; color: #2196F3;" id="totalSparepart">0</div>
+                                <div style="font-size: 12px; color: #666;">TOTAL ITEM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>SISTEM PERHITUNGAN HM MESIN PKS - FORMAT FDF</strong></p>
+            <p>PT. BANGKITGIAT USAHA MANDIRI - By. Jonius Abertus</p>
+            <p class="signature">© 2024 Sistem Terintegrasi - HM Akhir - HM Awal = HM Hari Ini</p>
+        </div>
+    </div>
+
+    <script>
+        // Manifest untuk PWA
+        const manifest = {
+            "name": "Sistem HM Mesin PKS",
+            "short_name": "HM PKS",
+            "description": "Sistem Perhitungan Hour Meter Mesin PKS PT. Bangkitgiat Usaha Mandiri",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0D47A1",
+            "theme_color": "#0D47A1",
+            "icons": [
+                {
+                    "src": "icon-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "icon-512x512.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+
+        // Data storage dengan struktur yang diperbaiki
+        let mesinData = {
+            press: {
+                1: { 
+                    nama: "Press #1", 
+                    hmAwal: 7611.97, 
+                    hmAkhir: 7624.41, 
+                    totalHM: 1250, 
+                    status: "normal",
+                    cumulativeHM: 7624.41
+                },
+                2: { 
+                    nama: "Press #2", 
+                    hmAwal: 6512.45, 
+                    hmAkhir: 6525.10, 
+                    totalHM: 1120, 
+                    status: "normal",
+                    cumulativeHM: 6525.10
+                },
+                3: { 
+                    nama: "Press #3", 
+                    hmAwal: 5897.33, 
+                    hmAkhir: 5910.20, 
+                    totalHM: 980, 
+                    status: "warning",
+                    cumulativeHM: 5910.20
+                },
+                4: { 
+                    nama: "Press #4", 
+                    hmAwal: 7234.67, 
+                    hmAkhir: 7247.15, 
+                    totalHM: 1340, 
+                    status: "normal",
+                    cumulativeHM: 7247.15
+                }
+            },
+            digester: {
+                1: { 
+                    nama: "Digester #1", 
+                    hmAwal: 5498.25, 
+                    hmAkhir: 5510.50, 
+                    totalHM: 980, 
+                    status: "normal",
+                    cumulativeHM: 5510.50
+                },
+                2: { 
+                    nama: "Digester #2", 
+                    hmAwal: 4987.65, 
+                    hmAkhir: 4999.80, 
+                    totalHM: 850, 
+                    status: "normal",
+                    cumulativeHM: 4999.80
+                },
+                3: { 
+                    nama: "Digester #3", 
+                    hmAwal: 5123.45, 
+                    hmAkhir: 5135.70, 
+                    totalHM: 920, 
+                    status: "warning",
+                    cumulativeHM: 5135.70
+                },
+                4: { 
+                    nama: "Digester #4", 
+                    hmAwal: 4678.90, 
+                    hmAkhir: 4691.25, 
+                    totalHM: 780, 
+                    status: "normal",
+                    cumulativeHM: 4691.25
+                }
+            },
+            sludge: {
+                3: { 
+                    nama: "Sludge #3", 
+                    hmAwal: 4123.75, 
+                    hmAkhir: 4135.20, 
+                    totalHM: 750, 
+                    status: "danger",
+                    cumulativeHM: 4135.20
+                },
+                4: { 
+                    nama: "Sludge #4", 
+                    hmAwal: 3876.45, 
+                    hmAkhir: 3888.90, 
+                    totalHM: 680, 
+                    status: "normal",
+                    cumulativeHM: 3888.90
+                },
+                5: { 
+                    nama: "Sludge #5", 
+                    hmAwal: 4234.10, 
+                    hmAkhir: 4246.55, 
+                    totalHM: 820, 
+                    status: "normal",
+                    cumulativeHM: 4246.55
+                },
+                6: { 
+                    nama: "Sludge #6", 
+                    hmAwal: 3987.25, 
+                    hmAkhir: 3999.70, 
+                    totalHM: 710, 
+                    status: "warning",
+                    cumulativeHM: 3999.70
+                },
+                7: { 
+                    nama: "Sludge #7", 
+                    hmAwal: 3765.90, 
+                    hmAkhir: 3778.35, 
+                    totalHM: 650, 
+                    status: "normal",
+                    cumulativeHM: 3778.35
+                },
+                8: { 
+                    nama: "Sludge #8", 
+                    hmAwal: 3654.30, 
+                    hmAkhir: 3666.75, 
+                    totalHM: 590, 
+                    status: "normal",
+                    cumulativeHM: 3666.75
+                }
+            },
+            ripple: {
+                1: { 
+                    nama: "Ripple Mill #1", 
+                    hmAwal: 2987.45, 
+                    hmAkhir: 2998.90, 
+                    totalHM: 1100, 
+                    status: "warning",
+                    cumulativeHM: 2998.90
+                },
+                2: { 
+                    nama: "Ripple Mill #2", 
+                    hmAwal: 2765.80, 
+                    hmAkhir: 2777.25, 
+                    totalHM: 950, 
+                    status: "normal",
+                    cumulativeHM: 2777.25
+                },
+                3: { 
+                    nama: "Ripple Mill #3", 
+                    hmAwal: 3123.15, 
+                    hmAkhir: 3134.60, 
+                    totalHM: 1250, 
+                    status: "normal",
+                    cumulativeHM: 3134.60
+                }
+            }
+        };
+
+        let historyData = [];
+        let selectedMachine = null;
+        let selectedType = null;
+        let selectedNumber = null;
+        
+        // Spare part data KOSONG, akan diinput manual
+        let sparePartData = {};
+        let selectedSparepartMachine = null;
+        let selectedSparepartType = null;
+        let selectedSparepartNumber = null;
+        
+        let deferredPrompt = null;
+
+        // Initialize
+        function initApp() {
+            // Set current date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('operasiDate').value = today;
+            
+            // Load data from localStorage jika ada
+            loadFromLocalStorage();
+            
+            // Load summary table
+            loadSummaryTable();
+            
+            // Load history
+            loadHistory();
+            
+            // Load spare part table (data masih kosong)
+            loadSparePartTable();
+            
+            // Calculate totals
+            updateTotals();
+            
+            // Setup PWA
+            setupPWA();
+            
+            // Set report number
+            document.getElementById('reportNo').value = `HM/PKS/${new Date().getFullYear()}/${String(historyData.length + 1).padStart(3, '0')}`;
+            
+            // Inisialisasi spare part data jika belum ada
+            initializeSparePartData();
+        }
+
+        // Inisialisasi struktur spare part data
+        function initializeSparePartData() {
+            // Inisialisasi struktur kosong untuk semua mesin
+            if (!sparePartData || Object.keys(sparePartData).length === 0) {
+                sparePartData = {
+                    press: {1: [], 2: [], 3: [], 4: []},
+                    digester: {1: [], 2: [], 3: [], 4: []},
+                    sludge: {3: [], 4: [], 5: [], 6: [], 7: [], 8: []},
+                    ripple: {1: [], 2: [], 3: []}
+                };
+            }
+        }
+
+        // PWA Setup
+        function setupPWA() {
+            // Register service worker jika browser mendukung
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').then(() => {
+                    console.log('Service Worker registered');
+                }).catch(err => {
+                    console.log('Service Worker registration failed:', err);
+                });
+            }
+            
+            // Listen for before install prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                setTimeout(() => {
+                    if (deferredPrompt && !localStorage.getItem('installPromptDismissed')) {
+                        document.getElementById('installPrompt').style.display = 'flex';
+                    }
+                }, 3000);
+            });
+            
+            // Check if app is already installed
+            window.addEventListener('appinstalled', () => {
+                console.log('Aplikasi berhasil diinstall');
+                deferredPrompt = null;
+                document.getElementById('installPrompt').style.display = 'none';
+            });
+            
+            // Check if running in standalone mode
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('Running in standalone mode');
+            }
+        }
+
+        // Install App
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted install');
+                        showNotification('Aplikasi berhasil diinstall!', 'success');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').style.display = 'none';
+                });
+            }
+        }
+
+        // Dismiss Install Prompt
+        function dismissPrompt() {
+            document.getElementById('installPrompt').style.display = 'none';
+            localStorage.setItem('installPromptDismissed', 'true');
+        }
+
+        // Switch Tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).style.display = 'block';
+            event.target.classList.add('active');
+            
+            if (tabName === 'report') {
+                previewReport();
+            } else if (tabName === 'sparepart') {
+                refreshSparepartTable();
+            }
+        }
+
+        // Show all tabs initially
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                if (tab.id !== 'inputHM') {
+                    tab.style.display = 'none';
+                }
+            });
+            initApp();
+        });
+
+        // Select Machine untuk Input HM
+        function selectMachine(type, number) {
+            document.querySelectorAll('.machine-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.remove('warning');
+                btn.classList.remove('danger');
+            });
+            
+            event.target.classList.add('active');
+            
+            selectedType = type;
+            selectedNumber = number;
+            selectedMachine = mesinData[type][number];
+            
+            document.getElementById('selectedMachine').value = selectedMachine.nama;
+            document.getElementById('machineLabel').innerHTML = `<i class="fas fa-industry"></i> ${selectedMachine.nama}`;
+            
+            // PERBAIKAN UTAMA: HM Awal diambil dari HM Akhir sebelumnya
+            document.getElementById('hmAwal').value = selectedMachine.hmAkhir.toFixed(2);
+            document.getElementById('hmAkhir').value = '';
+            document.getElementById('hmAkhir').focus();
+            
+            // Update tampilan hasil
+            document.getElementById('resultKumulatif').innerHTML = `${selectedMachine.cumulativeHM.toFixed(2)}<span class="result-unit"> jam</span>`;
+            document.getElementById('resultMesinHM').innerHTML = `${selectedMachine.totalHM.toFixed(2)}<span class="result-unit"> jam</span>`;
+            
+            // Update status
+            let statusText = "NORMAL";
+            let statusColor = "#4CAF50";
+            
+            if (selectedMachine.status === 'warning') {
+                statusText = "WARNING";
+                statusColor = "#FF9800";
+                event.target.classList.add('warning');
+            } else if (selectedMachine.status === 'danger') {
+                statusText = "CRITICAL";
+                statusColor = "#F44336";
+                event.target.classList.add('danger');
+            }
+            
+            document.getElementById('resultStatus').innerHTML = statusText;
+            document.getElementById('resultStatus').style.color = statusColor;
+            
+            // Reset hasil perhitungan harian
+            document.getElementById('resultHariIni').innerHTML = `0.00<span class="result-unit"> jam</span>`;
+            
+            showNotification(`Mesin ${selectedMachine.nama} dipilih. HM Awal: ${selectedMachine.hmAkhir.toFixed(2)}`, 'info');
+        }
+
+        // Select Machine untuk Input Spare Part
+        function selectMachineForSparepart(type, number) {
+            document.querySelectorAll('#sparepart .machine-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.remove('warning');
+                btn.classList.remove('danger');
+            });
+            
+            event.target.classList.add('active');
+            
+            selectedSparepartType = type;
+            selectedSparepartNumber = number;
+            selectedSparepartMachine = mesinData[type][number];
+            
+            document.getElementById('btnOpenSparepart').disabled = false;
+            document.getElementById('btnOpenSparepart').innerHTML = `<i class="fas fa-plus"></i> INPUT SPARE PART UNTUK ${selectedSparepartMachine.nama}`;
+            
+            showNotification(`Mesin ${selectedSparepartMachine.nama} dipilih untuk input spare part`, 'info');
+        }
+
+        // Open Spare Part Input Modal
+        function openSparepartInput() {
+            if (!selectedSparepartMachine) {
+                showNotification('Pilih mesin terlebih dahulu!', 'warning');
+                return;
+            }
+            
+            document.getElementById('modalMachine').value = selectedSparepartMachine.nama;
+            
+            // Reset input fields
+            document.getElementById('sparepartInputs').innerHTML = `
+                <div class="sparepart-row">
+                    <input type="text" class="sparepart-input" placeholder="Nama Spare Part" oninput="validateSparePart(this)">
+                    <input type="number" class="sparepart-input" placeholder="Lifetime (HM)" min="1" step="1">
+                    <input type="number" class="sparepart-input" placeholder="Terpakai (HM)" min="0" step="1">
+                    <button class="remove-sparepart-btn" onclick="removeSparePartRow(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('sparepartModal').style.display = 'flex';
+        }
+
+        // Close Modal
+        function closeModal() {
+            document.getElementById('sparepartModal').style.display = 'none';
+        }
+
+        // Add Spare Part Row
+        function addSparePartRow() {
+            const container = document.getElementById('sparepartInputs');
+            const row = document.createElement('div');
+            row.className = 'sparepart-row';
+            row.innerHTML = `
+                <input type="text" class="sparepart-input" placeholder="Nama Spare Part" oninput="validateSparePart(this)">
+                <input type="number" class="sparepart-input" placeholder="Lifetime (HM)" min="1" step="1">
+                <input type="number" class="sparepart-input" placeholder="Terpakai (HM)" min="0" step="1">
+                <button class="remove-sparepart-btn" onclick="removeSparePartRow(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(row);
+        }
+
+        // Remove Spare Part Row
+        function removeSparePartRow(button) {
+            const row = button.closest('.sparepart-row');
+            if (row && document.querySelectorAll('.sparepart-row').length > 1) {
+                row.remove();
+            }
+        }
+
+        // Validate Spare Part Name
+        function validateSparePart(input) {
+            const value = input.value.trim();
+            if (value.length > 50) {
+                input.value = value.substring(0, 50);
+                showNotification('Nama spare part maksimal 50 karakter', 'warning');
+            }
+        }
+
+        // Save Spare Part
+        function saveSparePart() {
+            if (!selectedSparepartMachine || !selectedSparepartType || !selectedSparepartNumber) {
+                showNotification('Pilih mesin terlebih dahulu!', 'warning');
+                return;
+            }
+            
+            const rows = document.querySelectorAll('.sparepart-row');
+            const spareParts = [];
+            
+            let isValid = true;
+            
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('.sparepart-input');
+                const name = inputs[0].value.trim();
+                const lifetime = parseFloat(inputs[1].value);
+                const used = parseFloat(inputs[2].value);
+                
+                if (name && lifetime && used !== undefined) {
+                    if (lifetime <= 0) {
+                        showNotification('Lifetime harus lebih dari 0', 'warning');
+                        isValid = false;
+                        return;
+                    }
+                    
+                    if (used < 0) {
+                        showNotification('HM terpakai tidak boleh negatif', 'warning');
+                        isValid = false;
+                        return;
+                    }
+                    
+                    if (used > lifetime) {
+                        showNotification('HM terpakai tidak boleh lebih dari lifetime', 'warning');
+                        isValid = false;
+                        return;
+                    }
+                    
+                    spareParts.push({
+                        name: name,
+                        lifetime: lifetime,
+                        used: used,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+            });
+            
+            if (!isValid) return;
+            
+            if (spareParts.length === 0) {
+                showNotification('Isi data spare part terlebih dahulu!', 'warning');
+                return;
+            }
+            
+            // Simpan ke sparePartData
+            if (!sparePartData[selectedSparepartType]) {
+                sparePartData[selectedSparepartType] = {};
+            }
+            
+            sparePartData[selectedSparepartType][selectedSparepartNumber] = spareParts;
+            
+            // Save to localStorage
+            localStorage.setItem('sparePartData', JSON.stringify(sparePartData));
+            
+            // Update spare part table
+            loadSparePartTable();
+            
+            // Close modal
+            closeModal();
+            
+            showNotification(`${spareParts.length} spare part berhasil disimpan untuk ${selectedSparepartMachine.nama}`, 'success');
+            
+            // Reset selection
+            selectedSparepartMachine = null;
+            selectedSparepartType = null;
+            selectedSparepartNumber = null;
+            document.getElementById('btnOpenSparepart').disabled = true;
+            document.getElementById('btnOpenSparepart').innerHTML = `<i class="fas fa-plus"></i> INPUT SPARE PART`;
+            
+            // Refresh spare part table
+            refreshSparepartTable();
+        }
+
+        // Refresh Spare Part Table
+        function refreshSparepartTable() {
+            loadSparePartTable();
+            showNotification('Data spare part diperbarui', 'info');
+        }
+
+        // Export Spare Part Data
+        function exportSparepartData() {
+            const exportData = [];
+            
+            Object.keys(sparePartData).forEach(type => {
+                Object.keys(sparePartData[type]).forEach(number => {
+                    if (sparePartData[type][number] && sparePartData[type][number].length > 0) {
+                        const machineName = mesinData[type] && mesinData[type][number] ? mesinData[type][number].nama : `${type} #${number}`;
+                        
+                        sparePartData[type][number].forEach(part => {
+                            const remaining = part.lifetime - part.used;
+                            const percentage = (part.used / part.lifetime) * 100;
+                            
+                            let status = "NORMAL";
+                            if (percentage >= 90) status = "CRITICAL";
+                            else if (percentage >= 70) status = "WARNING";
+                            
+                            exportData.push({
+                                Mesin: machineName,
+                                'Spare Part': part.name,
+                                'Lifetime (HM)': part.lifetime,
+                                'Terpakai (HM)': part.used,
+                                'Sisa (HM)': remaining,
+                                'Persentase': percentage.toFixed(1) + '%',
+                                Status: status
+                            });
+                        });
+                    }
+                });
+            });
+            
+            if (exportData.length === 0) {
+                showNotification('Belum ada data spare part untuk diexport', 'warning');
+                return;
+            }
+            
+            const csv = convertToCSV(exportData);
+            downloadCSV(csv, `sparepart_${new Date().toISOString().split('T')[0]}.csv`);
+            
+            showNotification('Data spare part berhasil diexport!', 'success');
+        }
+
+        // Calculate HM
+        function hitungHM() {
+            if (!selectedMachine) {
+                showNotification('Pilih mesin terlebih dahulu!', 'warning');
+                return;
+            }
+            
+            const hmAwal = parseFloat(document.getElementById('hmAwal').value) || 0;
+            const hmAkhir = parseFloat(document.getElementById('hmAkhir').value) || 0;
+            
+            if (hmAwal === 0) {
+                showNotification('HM Awal tidak valid!', 'warning');
+                return;
+            }
+            
+            if (hmAkhir === 0) {
+                showNotification('Harap isi HM Akhir!', 'warning');
+                return;
+            }
+            
+            if (hmAkhir <= hmAwal) {
+                showNotification('HM Akhir harus lebih besar dari HM Awal!', 'warning');
+                return;
+            }
+            
+            const selisih = hmAkhir - hmAwal;
+            
+            document.getElementById('resultHariIni').innerHTML = `${selisih.toFixed(2)}<span class="result-unit"> jam</span>`;
+            
+            const newCumulative = selectedMachine.cumulativeHM + selisih;
+            document.getElementById('resultKumulatif').innerHTML = `${newCumulative.toFixed(2)}<span class="result-unit"> jam</span>`;
+            
+            const newTotalHM = selectedMachine.totalHM + selisih;
+            document.getElementById('resultMesinHM').innerHTML = `${newTotalHM.toFixed(2)}<span class="result-unit"> jam</span>`;
+            
+            showNotification(`HM dihitung: ${selisih.toFixed(2)} jam`, 'success');
+        }
+
+        // Hitung Semua Mesin
+        function hitungSemua() {
+            let totalAll = 0;
+            let calculatedMachines = 0;
+            
+            Object.keys(mesinData).forEach(type => {
+                Object.keys(mesinData[type]).forEach(number => {
+                    const machine = mesinData[type][number];
+                    const hmHariIni = (machine.hmAkhir - machine.hmAwal);
+                    totalAll += hmHariIni;
+                    calculatedMachines++;
+                });
+            });
+            
+            showNotification(`Total HM semua mesin hari ini: ${totalAll.toFixed(2)} jam (${calculatedMachines} mesin)`, 'info');
+        }
+
+        // Save Data
+        function simpanData() {
+            if (!selectedMachine) {
+                showNotification('Pilih mesin terlebih dahulu!', 'warning');
+                return;
+            }
+            
+            const hmAwal = parseFloat(document.getElementById('hmAwal').value) || 0;
+            const hmAkhir = parseFloat(document.getElementById('hmAkhir').value) || 0;
+            const tanggal = document.getElementById('operasiDate').value;
+            const shift = document.getElementById('operasiShift').value;
+            const notes = document.getElementById('hmNotes').value;
+            
+            if (hmAwal === 0 || hmAkhir === 0) {
+                showNotification('Harap isi HM Awal dan HM Akhir!', 'warning');
+                return;
+            }
+            
+            if (!tanggal) {
+                showNotification('Harap isi tanggal operasi!', 'warning');
+                return;
+            }
+            
+            const selisih = hmAkhir - hmAwal;
+            const newCumulativeHM = selectedMachine.cumulativeHM + selisih;
+            const newTotalHM = selectedMachine.totalHM + selisih;
+            
+            const record = {
+                id: Date.now(),
+                tanggal: tanggal,
+                machineType: selectedType,
+                machineNumber: selectedNumber,
+                machineName: selectedMachine.nama,
+                shift: shift,
+                hmAwal: hmAwal,
+                hmAkhir: hmAkhir,
+                hmHariIni: selisih,
+                cumulativeHM: newCumulativeHM,
+                totalHM: newTotalHM,
+                notes: notes,
+                timestamp: new Date().toISOString()
+            };
+            
+            historyData.unshift(record);
+            
+            // PERBAIKAN UTAMA: Update HM Awal menjadi HM Akhir yang baru
+            mesinData[selectedType][selectedNumber].hmAwal = hmAkhir;
+            mesinData[selectedType][selectedNumber].hmAkhir = hmAkhir;
+            mesinData[selectedType][selectedNumber].cumulativeHM = newCumulativeHM;
+            mesinData[selectedType][selectedNumber].totalHM = newTotalHM;
+            
+            updateMachineStatus(selectedType, selectedNumber);
+            
+            saveToLocalStorage();
+            
+            showNotification(`Data ${selectedMachine.nama} berhasil disimpan! HM: ${selisih.toFixed(2)} jam`, 'success');
+            
+            // Reload tables
+            loadSummaryTable();
+            loadHistory();
+            updateTotals();
+            
+            // Reset form untuk input berikutnya
+            document.getElementById('hmAwal').value = hmAkhir.toFixed(2);
+            document.getElementById('hmAkhir').value = '';
+            document.getElementById('hmNotes').value = '';
+            document.getElementById('resultHariIni').innerHTML = `0.00<span class="result-unit"> jam</span>`;
+            
+            // Update result displays
+            document.getElementById('resultKumulatif').innerHTML = `${newCumulativeHM.toFixed(2)}<span class="result-unit"> jam</span>`;
+            document.getElementById('resultMesinHM').innerHTML = `${newTotalHM.toFixed(2)}<span class="result-unit"> jam</span>`;
+            
+            // Update report number
+            document.getElementById('reportNo').value = `HM/PKS/${new Date().getFullYear()}/${String(historyData.length + 1).padStart(3, '0')}`;
+        }
+
+        // Update Machine Status
+        function updateMachineStatus(type, number) {
+            const machine = mesinData[type][number];
+            const totalHM = machine.totalHM;
+            const cumulativeHM = machine.cumulativeHM;
+            
+            // Status logic berdasarkan total HM dan cumulative HM
+            if (cumulativeHM > 10000 || totalHM > 5000) {
+                machine.status = 'danger';
+            } else if (cumulativeHM > 8000 || totalHM > 4000) {
+                machine.status = 'warning';
+            } else {
+                machine.status = 'normal';
+            }
+        }
+
+        // Load Summary Table
+        function loadSummaryTable() {
+            const tableBody = document.getElementById('summaryTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            let counter = 1;
+            let totalMesinCounter = 0;
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    const machine = machines[number];
+                    const hmHariIni = machine.hmAkhir - machine.hmAwal;
+                    
+                    let statusBadge = '';
+                    if (machine.status === 'normal') {
+                        statusBadge = '<span style="background: #4CAF50; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">NORMAL</span>';
+                    } else if (machine.status === 'warning') {
+                        statusBadge = '<span style="background: #FF9800; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">WARNING</span>';
+                    } else {
+                        statusBadge = '<span style="background: #F44336; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">CRITICAL</span>';
+                    }
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${counter}</td>
+                        <td><strong>${machine.nama}</strong></td>
+                        <td>${machine.hmAkhir.toFixed(2)}</td>
+                        <td>${hmHariIni.toFixed(2)}</td>
+                        <td><span style="color: var(--primary); font-weight: 700;">${machine.cumulativeHM.toFixed(2)}</span></td>
+                        <td>${statusBadge}</td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                    counter++;
+                    totalMesinCounter++;
+                });
+            });
+            
+            document.getElementById('totalMesinCounter').textContent = totalMesinCounter;
+        }
+
+        // Update Totals
+        function updateTotals() {
+            let totalHariIni = 0;
+            let totalCumulative = 0;
+            let totalMesin = 0;
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    const machine = machines[number];
+                    totalHariIni += (machine.hmAkhir - machine.hmAwal);
+                    totalCumulative += machine.cumulativeHM;
+                    totalMesin++;
+                });
+            });
+            
+            document.getElementById('totalHariIni').textContent = totalHariIni.toFixed(2);
+            document.getElementById('totalCumulative').textContent = totalCumulative.toFixed(2);
+            document.getElementById('totalMesin').textContent = totalMesin;
+        }
+
+        // Load History
+        function loadHistory() {
+            const tableBody = document.getElementById('historyTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            if (historyData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="9" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-history" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                        Belum ada data riwayat
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            historyData.slice(0, 50).forEach(record => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${formatDate(record.tanggal)}</td>
+                    <td><strong>${record.machineName}</strong></td>
+                    <td>${record.shift}</td>
+                    <td>${record.hmAwal.toFixed(2)}</td>
+                    <td>${record.hmAkhir.toFixed(2)}</td>
+                    <td><strong style="color: var(--primary);">${record.hmHariIni.toFixed(2)}</strong></td>
+                    <td><strong style="color: var(--success);">${record.cumulativeHM.toFixed(2)}</strong></td>
+                    <td>${record.notes || '-'}</td>
+                    <td>
+                        <button onclick="deleteHistory(${record.id})" style="background: #FFEBEE; color: #F44336; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Filter History
+        function filterHistory() {
+            const filterMachine = document.getElementById('filterMachine').value;
+            const filterDate = document.getElementById('filterDate').value;
+            const tableBody = document.getElementById('historyTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            let filteredData = historyData;
+            
+            if (filterMachine !== 'all') {
+                filteredData = filteredData.filter(record => record.machineType === filterMachine);
+            }
+            
+            if (filterDate) {
+                filteredData = filteredData.filter(record => record.tanggal === filterDate);
+            }
+            
+            if (filteredData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="9" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-search" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                        Tidak ada data untuk filter yang dipilih
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            filteredData.slice(0, 50).forEach(record => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${formatDate(record.tanggal)}</td>
+                    <td><strong>${record.machineName}</strong></td>
+                    <td>${record.shift}</td>
+                    <td>${record.hmAwal.toFixed(2)}</td>
+                    <td>${record.hmAkhir.toFixed(2)}</td>
+                    <td><strong style="color: var(--primary);">${record.hmHariIni.toFixed(2)}</strong></td>
+                    <td><strong style="color: var(--success);">${record.cumulativeHM.toFixed(2)}</strong></td>
+                    <td>${record.notes || '-'}</td>
+                    <td>
+                        <button onclick="deleteHistory(${record.id})" style="background: #FFEBEE; color: #F44336; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Export History
+        function exportHistory() {
+            const data = historyData.map(record => ({
+                Tanggal: formatDate(record.tanggal),
+                Mesin: record.machineName,
+                Shift: record.shift,
+                'HM Awal': record.hmAwal.toFixed(2),
+                'HM Akhir': record.hmAkhir.toFixed(2),
+                'HM Hari Ini': record.hmHariIni.toFixed(2),
+                'HM Kumulatif': record.cumulativeHM.toFixed(2),
+                Keterangan: record.notes || '-'
+            }));
+            
+            const csv = convertToCSV(data);
+            downloadCSV(csv, `riwayat_hm_${new Date().toISOString().split('T')[0]}.csv`);
+            
+            showNotification('Data riwayat berhasil diexport!', 'success');
+        }
+
+        // Export Data
+        function exportData() {
+            const exportData = {
+                mesinData: mesinData,
+                historyData: historyData,
+                sparePartData: sparePartData,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = `backup_hm_system_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showNotification('Backup data berhasil diexport!', 'success');
+        }
+
+        // Delete History
+        function deleteHistory(recordId) {
+            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                const index = historyData.findIndex(r => r.id === recordId);
+                if (index !== -1) {
+                    const record = historyData[index];
+                    
+                    if (mesinData[record.machineType] && mesinData[record.machineType][record.machineNumber]) {
+                        mesinData[record.machineType][record.machineNumber].cumulativeHM -= record.hmHariIni;
+                        mesinData[record.machineType][record.machineNumber].totalHM -= record.hmHariIni;
+                    }
+                    
+                    historyData.splice(index, 1);
+                    
+                    saveToLocalStorage();
+                    
+                    showNotification('Data riwayat berhasil dihapus!', 'success');
+                    loadHistory();
+                    loadSummaryTable();
+                    updateTotals();
+                }
+            }
+        }
+
+        // Load Spare Part Table
+        function loadSparePartTable() {
+            const tableBody = document.getElementById('sparePartTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            let sparePartCounter = 0;
+            let statusNormal = 0;
+            let statusWarning = 0;
+            let statusCritical = 0;
+            
+            // Inisialisasi jika belum ada
+            initializeSparePartData();
+            
+            Object.keys(sparePartData).forEach(type => {
+                Object.keys(sparePartData[type]).forEach(number => {
+                    if (sparePartData[type][number] && sparePartData[type][number].length > 0) {
+                        const machineName = mesinData[type] && mesinData[type][number] ? mesinData[type][number].nama : `${type} #${number}`;
+                        
+                        sparePartData[type][number].forEach(part => {
+                            const remaining = part.lifetime - part.used;
+                            const percentage = (part.used / part.lifetime) * 100;
+                            
+                            let status = "NORMAL";
+                            let statusColor = "#4CAF50";
+                            let progressClass = "progress-normal";
+                            
+                            if (percentage >= 90) {
+                                status = "CRITICAL";
+                                statusColor = "#F44336";
+                                progressClass = "progress-danger";
+                                statusCritical++;
+                            } else if (percentage >= 70) {
+                                status = "WARNING";
+                                statusColor = "#FF9800";
+                                progressClass = "progress-warning";
+                                statusWarning++;
+                            } else {
+                                statusNormal++;
+                            }
+                            
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td><strong>${machineName}</strong></td>
+                                <td>${part.name}</td>
+                                <td>${part.lifetime}</td>
+                                <td>${part.used.toFixed(0)}</td>
+                                <td>${remaining.toFixed(0)}</td>
+                                <td>
+                                    ${percentage.toFixed(1)}%
+                                    <div class="progress-bar">
+                                        <div class="progress-fill ${progressClass}" style="width: ${percentage}%"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="background: ${statusColor}; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">
+                                        ${status}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button onclick="editSparePart('${type}', ${number}, '${part.name}')" style="background: #E3F2FD; color: var(--primary); border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteSparePart('${type}', ${number}, '${part.name}')" style="background: #FFEBEE; color: #F44336; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            
+                            tableBody.appendChild(row);
+                            sparePartCounter++;
+                        });
+                    }
+                });
+            });
+            
+            if (sparePartCounter === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="8" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-tools" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                        Belum ada data spare part. Silakan input spare part manual.
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            }
+            
+            document.getElementById('sparePartCounter').textContent = sparePartCounter;
+            document.getElementById('statusNormal').textContent = statusNormal;
+            document.getElementById('statusWarning').textContent = statusWarning;
+            document.getElementById('statusCritical').textContent = statusCritical;
+            document.getElementById('totalSparepart').textContent = sparePartCounter;
+        }
+
+        // Edit Spare Part
+        function editSparePart(type, number, partName) {
+            if (!sparePartData[type] || !sparePartData[type][number]) {
+                showNotification('Data spare part tidak ditemukan', 'warning');
+                return;
+            }
+            
+            const partIndex = sparePartData[type][number].findIndex(p => p.name === partName);
+            if (partIndex === -1) {
+                showNotification('Spare part tidak ditemukan', 'warning');
+                return;
+            }
+            
+            selectedSparepartType = type;
+            selectedSparepartNumber = number;
+            selectedSparepartMachine = mesinData[type][number];
+            
+            const part = sparePartData[type][number][partIndex];
+            
+            document.getElementById('modalMachine').value = selectedSparepartMachine.nama;
+            
+            document.getElementById('sparepartInputs').innerHTML = `
+                <div class="sparepart-row">
+                    <input type="text" class="sparepart-input" value="${part.name}" oninput="validateSparePart(this)">
+                    <input type="number" class="sparepart-input" value="${part.lifetime}" placeholder="Lifetime (HM)" min="1" step="1">
+                    <input type="number" class="sparepart-input" value="${part.used}" placeholder="Terpakai (HM)" min="0" step="1">
+                    <button class="remove-sparepart-btn" onclick="removeSparePartRow(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('sparepartModal').style.display = 'flex';
+            document.getElementById('sparepartModal').dataset.editMode = 'true';
+            document.getElementById('sparepartModal').dataset.partName = partName;
+        }
+
+        // Delete Spare Part
+        function deleteSparePart(type, number, partName) {
+            if (confirm(`Apakah Anda yakin ingin menghapus spare part "${partName}"?`)) {
+                if (!sparePartData[type] || !sparePartData[type][number]) {
+                    showNotification('Data spare part tidak ditemukan', 'warning');
+                    return;
+                }
+                
+                const partIndex = sparePartData[type][number].findIndex(p => p.name === partName);
+                if (partIndex === -1) {
+                    showNotification('Spare part tidak ditemukan', 'warning');
+                    return;
+                }
+                
+                sparePartData[type][number].splice(partIndex, 1);
+                
+                if (sparePartData[type][number].length === 0) {
+                    delete sparePartData[type][number];
+                }
+                
+                localStorage.setItem('sparePartData', JSON.stringify(sparePartData));
+                loadSparePartTable();
+                
+                showNotification(`Spare part "${partName}" berhasil dihapus`, 'success');
+            }
+        }
+
+        // Preview Report
+        function previewReport() {
+            const period = document.getElementById('reportPeriod').value;
+            const unit = document.getElementById('reportUnit').value;
+            const pj = document.getElementById('reportPJ').value;
+            const noLaporan = document.getElementById('reportNo').value;
+            
+            const today = new Date();
+            const periodeText = getPeriodText(period, today);
+            
+            let totalHariIni = 0;
+            let totalCumulative = 0;
+            let totalMesin = 0;
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    const machine = machines[number];
+                    totalHariIni += (machine.hmAkhir - machine.hmAwal);
+                    totalCumulative += machine.cumulativeHM;
+                    totalMesin++;
+                });
+            });
+            
+            let content = generateReportContent(periodeText, unit, pj, noLaporan, totalHariIni, totalCumulative, totalMesin);
+            
+            document.getElementById('reportPreview').innerHTML = content;
+            showNotification('Preview laporan berhasil ditampilkan!', 'success');
+        }
+
+        // Generate FDF Report
+        function generateFDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            doc.setProperties({
+                title: 'Laporan HM Mesin PKS',
+                subject: 'Hour Meter Report',
+                author: 'PT. Bangkitgiat Usaha Mandiri',
+                creator: 'Jonius Abertus'
+            });
+            
+            const unit = document.getElementById('reportUnit').value;
+            const pj = document.getElementById('reportPJ').value;
+            const noLaporan = document.getElementById('reportNo').value;
+            
+            // Header
+            doc.setFontSize(16);
+            doc.setTextColor(13, 71, 161);
+            doc.setFont('helvetica', 'bold');
+            doc.text('LAPORAN HM MESIN PKS', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+            doc.text(unit, 105, 30, { align: 'center' });
+            
+            const today = new Date();
+            doc.setFontSize(10);
+            doc.text(`No: ${noLaporan}`, 105, 37, { align: 'center' });
+            doc.text(`Tanggal: ${formatDate(today.toISOString().split('T')[0])}`, 105, 42, { align: 'center' });
+            doc.text(`PJ: ${pj}`, 105, 47, { align: 'center' });
+            
+            // Data Table
+            const tableData = [];
+            let counter = 1;
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    const machine = machines[number];
+                    const hmHariIni = machine.hmAkhir - machine.hmAwal;
+                    
+                    let status = "NORMAL";
+                    if (machine.status === 'warning') status = "WARNING";
+                    if (machine.status === 'danger') status = "CRITICAL";
+                    
+                    tableData.push([
+                        counter.toString(),
+                        machine.nama,
+                        machine.hmAwal.toFixed(2),
+                        machine.hmAkhir.toFixed(2),
+                        hmHariIni.toFixed(2),
+                        machine.cumulativeHM.toFixed(2),
+                        status
+                    ]);
+                    counter++;
+                });
+            });
+            
+            doc.autoTable({
+                head: [['NO', 'MESIN', 'HM AWAL', 'HM AKHIR', 'HM HARI INI', 'HM KUMULATIF', 'STATUS']],
+                body: tableData,
+                startY: 55,
+                theme: 'grid',
+                headStyles: { fillColor: [13, 71, 161] },
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: {
+                    0: { cellWidth: 10 },
+                    1: { cellWidth: 30 },
+                    2: { cellWidth: 25 },
+                    3: { cellWidth: 25 },
+                    4: { cellWidth: 25 },
+                    5: { cellWidth: 30 },
+                    6: { cellWidth: 20 }
+                }
+            });
+            
+            doc.save(`Laporan_HM_${today.toISOString().split('T')[0]}.pdf`);
+            showNotification('PDF berhasil dihasilkan!', 'success');
+        }
+
+        // Print Report
+        function printReport() {
+            window.print();
+        }
+
+        // Reset Form
+        function resetForm() {
+            if (selectedMachine) {
+                document.getElementById('hmAkhir').value = '';
+                document.getElementById('hmNotes').value = '';
+                document.getElementById('resultHariIni').innerHTML = `0.00<span class="result-unit"> jam</span>`;
+                showNotification('Form berhasil direset', 'info');
+            } else {
+                showNotification('Pilih mesin terlebih dahulu!', 'warning');
+            }
+        }
+
+        // LocalStorage Functions
+        function saveToLocalStorage() {
+            localStorage.setItem('mesinData', JSON.stringify(mesinData));
+            localStorage.setItem('historyData', JSON.stringify(historyData));
+            localStorage.setItem('sparePartData', JSON.stringify(sparePartData));
+            localStorage.setItem('lastSave', new Date().toISOString());
+        }
+
+        function loadFromLocalStorage() {
+            const savedMesinData = localStorage.getItem('mesinData');
+            const savedHistoryData = localStorage.getItem('historyData');
+            const savedSparePartData = localStorage.getItem('sparePartData');
+            
+            if (savedMesinData) {
+                const parsed = JSON.parse(savedMesinData);
+                Object.keys(parsed).forEach(type => {
+                    if (mesinData[type]) {
+                        Object.keys(parsed[type]).forEach(number => {
+                            if (mesinData[type][number]) {
+                                Object.assign(mesinData[type][number], parsed[type][number]);
+                            }
+                        });
+                    }
+                });
+            }
+            
+            if (savedHistoryData) {
+                historyData = JSON.parse(savedHistoryData);
+            }
+            
+            if (savedSparePartData) {
+                sparePartData = JSON.parse(savedSparePartData);
+            }
+        }
+
+        // Helper Functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function getPeriodText(period, date) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            
+            switch(period) {
+                case 'daily':
+                    return `Harian - ${date.toLocaleDateString('id-ID', options)}`;
+                case 'weekly':
+                    const startOfWeek = new Date(date);
+                    startOfWeek.setDate(date.getDate() - date.getDay());
+                    const endOfWeek = new Date(startOfWeek);
+                    endOfWeek.setDate(startOfWeek.getDate() + 6);
+                    return `Mingguan ${startOfWeek.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })} - ${endOfWeek.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+                case 'monthly':
+                    return `Bulan ${date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`;
+                default:
+                    return `Kustom - ${date.toLocaleDateString('id-ID', options)}`;
+            }
+        }
+
+        function generateReportContent(periodeText, unit, pj, noLaporan, totalHariIni, totalCumulative, totalMesin) {
+            return `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <!-- Header -->
+                    <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px double #000;">
+                        <h2 style="color: #0D47A1; margin-bottom: 5px; font-size: 24px;">LAPORAN HM MESIN PKS</h2>
+                        <h3 style="color: #1565C0; margin-bottom: 10px; font-size: 18px;">${unit}</h3>
+                        <p style="color: #666; margin-bottom: 5px;">No: ${noLaporan}</p>
+                        <p style="color: #666;">Periode: ${periodeText}</p>
+                    </div>
+                    
+                    <!-- Information -->
+                    <div style="margin-bottom: 30px;">
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                            <tr>
+                                <td style="width: 30%; padding: 8px 0;"><strong>Penanggung Jawab:</strong></td>
+                                <td style="padding: 8px 0;">${pj}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0;"><strong>Tanggal Cetak:</strong></td>
+                                <td style="padding: 8px 0;">${formatDate(new Date().toISOString().split('T')[0])}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0;"><strong>Total Mesin:</strong></td>
+                                <td style="padding: 8px 0;">${totalMesin} Unit</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0;"><strong>Total HM Hari Ini:</strong></td>
+                                <td style="padding: 8px 0; font-weight: bold; color: #0D47A1;">${totalHariIni.toFixed(2)} jam</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0;"><strong>Total HM Kumulatif:</strong></td>
+                                <td style="padding: 8px 0; font-weight: bold; color: #0D47A1;">${totalCumulative.toFixed(2)} jam</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- HM Data Table -->
+                    <div style="margin-bottom: 30px;">
+                        <h4 style="color: #0D47A1; margin-bottom: 15px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;">
+                            DATA HM MESIN PER UNIT
+                        </h4>
+                        <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; font-size: 11px;">
+                            <thead>
+                                <tr style="background: #E3F2FD;">
+                                    <th style="border: 1px solid #000; padding: 8px; text-align: center;">NO</th>
+                                    <th style="border: 1px solid #000; padding: 8px; text-align: center;">MESIN</th>
+                                    <th style="border: 1px solid #000; padding: 8px; text-align: center;">HM AWAL</th>
+                                    <th style="border: 1px solid #000; padding: 8px; text-align: center;">HM AKHIR</th>
+                                    <th style="border: 1px solid #000; padding: 8px; text-align: center;">HM HARI INI</th>
+                                    <th style="border: 1px solid #000; padding: 8px; text-align: center;">HM KUMULATIF</th>
+                                    <th style="border: 1px solid #000; padding: 8px; text-align: center;">STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${generateMachineRows()}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Spare Part Section (jika ada) -->
+                    ${generateSparePartReportSection()}
+                    
+                    <!-- Summary -->
+                    <div style="margin-bottom: 30px;">
+                        <h4 style="color: #0D47A1; margin-bottom: 15px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;">
+                            RINGKASAN MESIN
+                        </h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            ${generateSummaryRows()}
+                        </table>
+                    </div>
+                    
+                    <!-- Signatures -->
+                    <div style="margin-top: 50px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 50%; text-align: center; padding-top: 40px;">
+                                    <div style="border-top: 1px solid #000; width: 200px; margin: 0 auto; padding-top: 10px;">
+                                        Operator PKS
+                                    </div>
+                                </td>
+                                <td style="width: 50%; text-align: center; padding-top: 40px;">
+                                    <div style="border-top: 1px solid #000; width: 200px; margin: 0 auto; padding-top: 10px;">
+                                        Penanggung Jawab
+                                        <br>
+                                        <strong>${pj}</strong>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Footer Note -->
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #999; font-size: 10px; color: #666; text-align: center;">
+                        <p>Laporan ini digenerate secara otomatis oleh Sistem HM Mesin PKS - PT. Bangkitgiat Usaha Mandiri</p>
+                        <p>Rumus: HM Hari Ini = HM Akhir - HM Awal | Total HM Kumulatif = Jumlah semua HM</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateMachineRows() {
+            let rows = '';
+            let counter = 1;
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    const machine = machines[number];
+                    const hmHariIni = machine.hmAkhir - machine.hmAwal;
+                    
+                    let status = "NORMAL";
+                    let statusColor = "#4CAF50";
+                    
+                    if (machine.status === 'warning') {
+                        status = "WARNING";
+                        statusColor = "#FF9800";
+                    } else if (machine.status === 'danger') {
+                        status = "CRITICAL";
+                        statusColor = "#F44336";
+                    }
+                    
+                    rows += `
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 6px; text-align: center;">${counter}</td>
+                            <td style="border: 1px solid #000; padding: 6px; text-align: center;">${machine.nama}</td>
+                            <td style="border: 1px solid #000; padding: 6px; text-align: center;">${machine.hmAwal.toFixed(2)}</td>
+                            <td style="border: 1px solid #000; padding: 6px; text-align: center;">${machine.hmAkhir.toFixed(2)}</td>
+                            <td style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold;">${hmHariIni.toFixed(2)}</td>
+                            <td style="border: 1px solid #000; padding: 6px; text-align: center; color: #2E7D32; font-weight: bold;">${machine.cumulativeHM.toFixed(2)}</td>
+                            <td style="border: 1px solid #000; padding: 6px; text-align: center;">
+                                <span style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px;">
+                                    ${status}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                    counter++;
+                });
+            });
+            
+            return rows;
+        }
+
+        function generateSparePartReportSection() {
+            let hasSparePartData = false;
+            
+            Object.keys(sparePartData).forEach(type => {
+                Object.keys(sparePartData[type]).forEach(number => {
+                    if (sparePartData[type][number] && sparePartData[type][number].length > 0) {
+                        hasSparePartData = true;
+                    }
+                });
+            });
+            
+            if (!hasSparePartData) {
+                return '';
+            }
+            
+            let sparePartRows = '';
+            let sparePartCounter = 0;
+            
+            Object.keys(sparePartData).forEach(type => {
+                Object.keys(sparePartData[type]).forEach(number => {
+                    if (sparePartData[type][number] && sparePartData[type][number].length > 0) {
+                        const machineName = mesinData[type] && mesinData[type][number] ? mesinData[type][number].nama : `${type} #${number}`;
+                        
+                        sparePartData[type][number].forEach(part => {
+                            const remaining = part.lifetime - part.used;
+                            const percentage = (part.used / part.lifetime) * 100;
+                            
+                            let status = "NORMAL";
+                            let statusColor = "#4CAF50";
+                            
+                            if (percentage >= 90) {
+                                status = "CRITICAL";
+                                statusColor = "#F44336";
+                            } else if (percentage >= 70) {
+                                status = "WARNING";
+                                statusColor = "#FF9800";
+                            }
+                            
+                            sparePartRows += `
+                                <tr>
+                                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${sparePartCounter + 1}</td>
+                                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${machineName}</td>
+                                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${part.name}</td>
+                                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${part.lifetime}</td>
+                                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${part.used.toFixed(0)}</td>
+                                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${remaining.toFixed(0)}</td>
+                                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">${percentage.toFixed(1)}%</td>
+                                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">
+                                        <span style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 9px;">
+                                            ${status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                            sparePartCounter++;
+                        });
+                    }
+                });
+            });
+            
+            if (sparePartCounter === 0) {
+                return '';
+            }
+            
+            return `
+                <div style="margin-bottom: 30px;">
+                    <h4 style="color: #0D47A1; margin-bottom: 15px; border-bottom: 2px solid #E0E0E0; padding-bottom: 5px;">
+                        DATA SPARE PART
+                    </h4>
+                    <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; font-size: 10px;">
+                        <thead>
+                            <tr style="background: #FFF3E0;">
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">NO</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">MESIN</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">SPARE PART</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">LIFETIME</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">TERPAKAI</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">SISA</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">%</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sparePartRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generateSummaryRows() {
+            let pressCount = Object.keys(mesinData.press || {}).length;
+            let digesterCount = Object.keys(mesinData.digester || {}).length;
+            let sludgeCount = Object.keys(mesinData.sludge || {}).length;
+            let rippleCount = Object.keys(mesinData.ripple || {}).length;
+            let totalMesin = pressCount + digesterCount + sludgeCount + rippleCount;
+            
+            return `
+                <tr>
+                    <td style="width: 40%; padding: 8px 0;"><strong>Mesin Press:</strong></td>
+                    <td style="padding: 8px 0;">${pressCount} Unit</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;"><strong>Digester:</strong></td>
+                    <td style="padding: 8px 0;">${digesterCount} Unit</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;"><strong>Sludge Centrifuge:</strong></td>
+                    <td style="padding: 8px 0;">${sludgeCount} Unit</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;"><strong>Ripple Mill:</strong></td>
+                    <td style="padding: 8px 0;">${rippleCount} Unit</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0;"><strong>Total Mesin:</strong></td>
+                    <td style="padding: 8px 0; font-weight: bold;">${totalMesin} Unit</td>
+                </tr>
+            `;
+        }
+
+        function convertToCSV(objArray) {
+            const array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+            let str = '';
+            
+            const header = Object.keys(array[0]);
+            str += header.join(',') + '\r\n';
+            
+            for (let i = 0; i < array.length; i++) {
+                let line = '';
+                for (let j = 0; j < header.length; j++) {
+                    if (line != '') line += ',';
+                    line += array[i][header[j]];
+                }
+                str += line + '\r\n';
+            }
+            
+            return str;
+        }
+
+        function downloadCSV(csv, filename) {
+            const csvFile = new Blob([csv], {type: "text/csv"});
+            const downloadLink = document.createElement("a");
+            downloadLink.download = filename;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        function showNotification(message, type = 'info') {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'danger' ? 'times-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100px)';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
