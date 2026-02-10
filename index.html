@@ -281,3 +281,89 @@ function generatePDF(){
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HM PMKS – FINAL</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+--blue:#0d47a1;--blue2:#1565c0;
+--bg:#f4f6f8;--card:#fff;
+--n:#2e7d32;--w:#f9a825;--d:#c62828;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Poppins;background:var(--bg)}
+header{background:var(--blue);color:#fff;padding:14px;text-align:center}
+nav{display:flex;background:#fff}
+nav button{flex:1;padding:12px;border:none;background:#fff;font-weight:600}
+nav button.active{background:var(--blue2);color:#fff}
+.container{padding:14px}
+.card{background:var(--card);padding:14px;border-radius:6px;margin-bottom:14px}
+input,select,button{width:100%;padding:8px;margin:6px 0}
+button.primary{background:var(--blue);color:#fff;border:none}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+.status-n{color:var(--n);font-weight:700}
+.status-w{color:var(--w);font-weight:700}
+.status-d{color:var(--d);font-weight:700}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+<header>
+<h2>SISTEM HM PMKS – FINAL</h2>
+<small>Offline • Audit-Safe • Industrial</small>
+</header>
+
+<nav>
+<button class="active" onclick="tab('dash')">Dashboard</button>
+<button onclick="tab('hm')">Input HM</button>
+<button onclick="tab('his')">Riwayat</button>
+<button onclick="tab('sp')">Spare Part</button>
+<button onclick="tab('rep')">Laporan</button>
+</nav>
+
+<div class="container">
+
+<div id="dash" class="card"></div>
+<div id="hm" class="card hidden"></div>
+<div id="his" class="card hidden"></div>
+<div id="sp" class="card hidden"></div>
+<div id="rep" class="card hidden"></div>
+
+</div>
+
+<script>
+/* ================= MASTER DATA ================= */
+const MESIN=[
+"Press No. 1","Press No. 2","Press No. 3","Press No. 4",
+"Digester No. 1","Digester No. 2","Digester No. 3","Digester No. 4",
+"Sludge Centrifuge No. 3","Sludge Centrifuge No. 4","Sludge Centrifuge No. 5",
+"Sludge Centrifuge No. 6","Sludge Centrifuge No. 7","Sludge Centrifuge No. 8",
+"Ripple Mill No. 1","Ripple Mill No. 2","Ripple Mill No. 3"
+];
+
+let hm=JSON.parse(localStorage.getItem("HM"))||{};
+let his=JSON.parse(localStorage.getItem("HIS"))||[];
+let sp=JSON.parse(localStorage.getItem("SP"))||[];
+
+/* init hm */
+MESIN.forEach(m=>{ if(!hm[m]) hm[m]={awal:0,total:0} });
+
+/* ================= TAB ================= */
+function tab(id){
+document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
+document.getElementById(id).classList.remove('hidden');
+document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+event.target.classList.add('active');
+render();
+}
+
