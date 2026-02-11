@@ -1,0 +1,2730 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEM HM MESIN PMKS - PT. Bangkitgiat Usaha Mandiri</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Condensed:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #0D47A1;
+            --secondary: #FF6F00;
+            --accent: #2196F3;
+            --dark-blue: #1565C0;
+            --light-blue: #E3F2FD;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --background: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text: #263238;
+            --border: #E0E0E0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ECEFF1 0%, #CFD8DC 100%);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 15px;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark-blue) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            background: white;
+            color: var(--primary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .title-section h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .title-section .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            font-family: 'Roboto Condensed', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Tabs Navigation */
+        .tabs-navigation {
+            display: flex;
+            background: white;
+            border-radius: var(--radius);
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 180px;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 8px rgba(13, 71, 161, 0.2);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: var(--light-blue);
+            color: var(--primary);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+
+        .card-title {
+            color: var(--primary);
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Machine Selection */
+        .machine-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #F8F9FA;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .machine-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .machine-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .machine-btn:hover:not(.active) {
+            background: var(--light-blue);
+            border-color: var(--accent);
+            color: var(--primary);
+        }
+
+        .machine-btn.warning {
+            border-color: var(--warning);
+            background: #FFF3E0;
+        }
+
+        .machine-btn.danger {
+            border-color: var(--danger);
+            background: #FFEBEE;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+
+        /* HM Input Section */
+        .hm-input-section {
+            background: linear-gradient(135deg, #E3F2FD 0%, #F5F7FA 100%);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #BBDEFB;
+        }
+
+        .hm-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .hm-input-group {
+            margin-bottom: 15px;
+        }
+
+        .hm-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hm-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            background: white;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .hm-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+            outline: none;
+        }
+
+        /* Status Selection */
+        .status-selection {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .status-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .status-btn.normal {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .status-btn.normal.active {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-btn.warning {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .status-btn.warning.active {
+            background: var(--warning);
+            color: white;
+        }
+
+        .status-btn.danger {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .status-btn.danger.active {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Results Display */
+        .results-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .result-box {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary);
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .result-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .result-unit {
+            font-size: 16px;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            padding: 15px 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .data-table th:last-child {
+            border-right: none;
+        }
+
+        .data-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            vertical-align: middle;
+            border-right: 1px solid #f0f0f0;
+        }
+
+        .data-table td:last-child {
+            border-right: none;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #F8F9FA;
+        }
+
+        .data-table tr:hover {
+            background: var(--light-blue);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.edit {
+            background: var(--warning);
+            color: white;
+        }
+
+        .action-btn.edit:hover {
+            background: #F57C00;
+        }
+
+        .action-btn.delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: #D32F2F;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+
+        .modal-title {
+            color: var(--primary);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+        }
+
+        /* Button Styles */
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--dark-blue) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(13, 71, 161, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #2E7D32 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #EF6C00 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 152, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #607D8B 0%, #455A64 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(96, 125, 139, 0.3);
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: var(--radius);
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.success { background: var(--success); }
+        .notification.warning { background: var(--warning); }
+        .notification.danger { background: var(--danger); }
+        .notification.info { background: var(--accent); }
+
+        /* Footer */
+        .footer {
+            background: var(--dark-blue);
+            color: white;
+            padding: 25px;
+            border-radius: var(--radius);
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .footer p {
+            margin-bottom: 10px;
+        }
+
+        .signature {
+            font-style: italic;
+            color: #BBDEFB;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .header-stats {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .tabs-navigation {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                min-width: 100%;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .machine-selection {
+                flex-direction: column;
+            }
+            
+            .machine-btn {
+                min-width: 100%;
+            }
+            
+            .hm-input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-display {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media print {
+            .main-header, .tabs-navigation, .button-group, .footer {
+                display: none !important;
+            }
+            
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #000 !important;
+                break-inside: avoid;
+            }
+            
+            .hm-input-section {
+                background: none !important;
+                border: 1px solid #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <div class="title-section">
+                        <h1>SISTEM PERHITUNGAN HM MESIN PMKS</h1>
+                        <p class="subtitle">PT. BANGKITGIAT USAHA MANDIRI - ASST JONIUS ABERTUS</p>
+                    </div>
+                </div>
+                
+                <div class="header-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalHariIni">0</div>
+                        <div class="stat-label">HM HARI INI</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalCumulative">0</div>
+                        <div class="stat-label">TOTAL HM</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalMesin">0</div>
+                        <div class="stat-label">MESIN</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-navigation">
+            <button class="tab-btn active" onclick="switchTab('inputHM')">
+                <i class="fas fa-calculator"></i> Input HM
+            </button>
+            <button class="tab-btn" onclick="switchTab('history')">
+                <i class="fas fa-history"></i> Riwayat
+            </button>
+            <button class="tab-btn" onclick="switchTab('report')">
+                <i class="fas fa-file-pdf"></i> Laporan FDF
+            </button>
+            <button class="tab-btn" onclick="switchTab('sparepart')">
+                <i class="fas fa-cogs"></i> Spare Part
+            </button>
+        </div>
+
+        <!-- Tab 1: Input HM -->
+        <div id="inputHM" class="tab-content active">
+            <div class="content-grid">
+                <!-- Input Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-calculator"></i> PERHITUNGAN HM MESIN</h3>
+                    </div>
+                    
+                    <!-- Machine Selection -->
+                    <div class="machine-selection">
+                        <h4 style="color: var(--primary); width: 100%; margin-bottom: 10px;">
+                            <i class="fas fa-server"></i> PILIH MESIN
+                        </h4>
+                        
+                        <!-- Press Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-compress-arrows-alt"></i> MESIN PRESS
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('press', 1)">
+                                    <i class="fas fa-cog"></i> Press 1
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('press', 2)">
+                                    <i class="fas fa-cog"></i> Press 2
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('press', 3)">
+                                    <i class="fas fa-cog"></i> Press 3
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('press', 4)">
+                                    <i class="fas fa-cog"></i> Press 4
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Digester Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-blender"></i> DIGESTER
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('digester', 1)">
+                                    <i class="fas fa-blender"></i> Digester 1
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('digester', 2)">
+                                    <i class="fas fa-blender"></i> Digester 2
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('digester', 3)">
+                                    <i class="fas fa-blender"></i> Digester 3
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('digester', 4)">
+                                    <i class="fas fa-blender"></i> Digester 4
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Sludge Centrifuge Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-blender"></i> SLUDGE CENTRIFUGE
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('sludge', 3)">
+                                    <i class="fas fa-blender"></i> Sludge Centrifuge 3
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 4)">
+                                    <i class="V"></i> Sludge Centrifuge 4
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 5)">
+                                    <i class="fas fa-blender"></i> Sludge Centrifuge 5
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 6)">
+                                    <i class="fas fa-blender"></i> Sludge Centrifuge 6
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 7)">
+                                    <i class="fas fa-blender"></i> Sludge Centrifuge 7
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('sludge', 8)">
+                                    <i class="fas fa-blender"></i> Sludge Centrifuge 8
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Ripple Mill Selection -->
+                        <div style="width: 100%;">
+                            <h5 style="color: var(--primary); margin-bottom: 8px; font-size: 14px;">
+                                <i class="fas fa-hammer"></i> RIPPLE MILL
+                            </h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                                <button class="machine-btn" onclick="selectMachine('ripple', 1)">
+                                    <i class="fas fa-hammer"></i> Ripple Mill 1
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('ripple', 2)">
+                                    <i class="fas fa-hammer"></i> Ripple Mill 2
+                                </button>
+                                <button class="machine-btn" onclick="selectMachine('ripple', 3)">
+                                    <i class="fas fa-hammer"></i> Ripple Mill 3
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="hm-input-section">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h4 style="color: var(--primary); margin-bottom: 10px;">FORMAT PERHITUNGAN HM</h4>
+                            <p style="color: #666; font-size: 14px;">HM Akhir - HM Awal = HM Hari Ini</p>
+                        </div>
+                        
+                        <div class="hm-input-grid">
+                            <div class="hm-input-group">
+                                <label id="machineLabel">
+                                    <i class="fas fa-industry"></i> MESIN TERPILIH
+                                </label>
+                                <input type="text" class="hm-input" id="selectedMachine" value="Pilih mesin terlebih dahulu" readonly>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-play-circle"></i> HM AWAL</label>
+                                <input type="number" class="hm-input" id="hmAwal" placeholder="Contoh: 7611.97" step="0.01" min="0">
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-stop-circle"></i> HM AKHIR</label>
+                                <input type="number" class="hm-input" id="hmAkhir" placeholder="Contoh: 7624.41" step="0.01" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Tanggal Input -->
+                        <div class="hm-input-group" style="margin-top: 20px;">
+                            <label><i class="fas fa-calendar-alt"></i> TANGGAL OPERASI</label>
+                            <input type="date" class="hm-input" id="operasiDate" value="">
+                        </div>
+                        
+                        <!-- Status Selection -->
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-flag"></i> STATUS MESIN</label>
+                            <div class="status-selection">
+                                <button class="status-btn normal active" onclick="selectStatus('normal')">NORMAL</button>
+                                <button class="status-btn warning" onclick="selectStatus('warning')">WARNING</button>
+                                <button class="status-btn danger" onclick="selectStatus('danger')">CRITICAL</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Keterangan -->
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-sticky-note"></i> KETERANGAN</label>
+                            <textarea class="hm-input" id="hmNotes" rows="2" placeholder="Catatan operasional..." style="text-align: left; height: auto;"></textarea>
+                        </div>
+                    </div>
+                    
+                                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="hitungHM()">
+                            <i class="fas fa-calculator"></i> HITUNG HM
+                        </button>
+                        <button class="btn btn-success" onclick="simpanData()">
+                            <i class="fas fa-save"></i> SIMPAN DATA
+                        </button>
+                        <button class="btn btn-warning" onclick="hitungSemua()">
+                            <i class="fas fa-calculator"></i> HITUNG SEMUA
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-redo"></i> RESET
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-bar"></i> RINGKASAN MESIN</h3>
+                        <span class="card-badge" id="totalMesinBadge" style="background: var(--primary); color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px;">
+                            <i class="fas fa-server"></i> 0 Mesin
+                        </span>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table" id="summaryTable">
+                            <thead>
+                                <tr>
+                                    <th>NO</th>
+                                    <th>MESIN</th>
+                                    <th>UNIT</th>
+                                    <th>HM TERAKHIR</th>
+                                    <th>TOTAL HM</th>
+                                    <th>STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: History -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-history"></i> RIWAYAT HM HARIAN</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="filterMachine" class="hm-input" style="width: 150px;">
+                            <option value="all">Semua Mesin</option>
+                            <option value="press">Mesin Press</option>
+                            <option value="digester">Digester</option>
+                            <option value="sludge">Sludge Centrifuge</option>
+                            <option value="ripple">Ripple Mill</option>
+                        </select>
+                        <input type="date" id="filterDate" class="hm-input" style="width: 150px;">
+                        <button class="btn btn-secondary" onclick="filterHistory()" style="padding: 8px 15px;">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>TANGGAL</th>
+                                <th>MESIN</th>
+                                <th>HM AWAL</th>
+                                <th>HM AKHIR</th>
+                                <th>SELISIH</th>
+                                <th>TOTAL HM</th>
+                                <th>STATUS</th>
+                                <th>KETERANGAN</th>
+                                <th>AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Report FDF -->
+        <div id="report" class="tab-content">
+            <div class="content-grid">
+                <!-- Report Generator -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-file-pdf"></i> GENERATE LAPORAN FDF</h3>
+                    </div>
+                    
+                    <div class="hm-input-section">
+                        <h4 style="color: var(--primary); margin-bottom: 20px; text-align: center;">
+                            <i class="fas fa-print"></i> FORMAT LAPORAN HM MESIN PMKS
+                        </h4>
+                        
+                        <div class="hm-input-grid">
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-calendar"></i> PERIODE LAPORAN</label>
+                                <select class="hm-input" id="reportPeriod">
+                                    <option value="daily">Harian</option>
+                                    <option value="weekly">Mingguan</option>
+                                    <option value="monthly">Bulanan</option>
+                                    <option value="custom">Kustom</option>
+                                </select>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-industry"></i> UNIT KERJA</label>
+                                <input type="text" class="hm-input" id="reportUnit" value="PKS PT. BANGKITGIAT USAHA MANDIRI" readonly>
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-user"></i> ASISTEN</label>
+                                <input type="text" class="hm-input" id="reportAsisten" value="Jonius Abertus">
+                            </div>
+                            
+                            <div class="hm-input-group">
+                                <label><i class="fas fa-file-signature"></i> NO. LAPORAN</label>
+                                <input type="text" class="hm-input" id="reportNo" value="HM/PKS/<?php echo date('Y/m'); ?>/001">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="previewReport()">
+                            <i class="fas fa-eye"></i> PREVIEW
+                        </button>
+                        <button class="btn btn-success" onclick="generateFDF()">
+                            <i class="fas fa-file-pdf"></i> GENERATE PDF
+                        </button>
+                        <button class="btn btn-warning" onclick="printReport()">
+                            <i class="fas fa-print"></i> PRINT
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetReport()">
+                            <i class="fas fa-redo"></i> RESET
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Preview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-eye"></i> PREVIEW LAPORAN</h3>
+                    </div>
+                    
+                    <div id="reportPreview" style="padding: 20px; background: white; border-radius: var(--radius); min-height: 400px; border: 2px solid #E0E0E0; overflow-y: auto;">
+                        <!-- Preview akan ditampilkan di sini -->
+                        <div style="text-align: center; padding: 50px; color: #999;">
+                            <i class="fas fa-file-pdf" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                            Klik "PREVIEW" untuk melihat laporan
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Spare Part -->
+        <div id="sparepart" class="tab-content">
+            <div class="content-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-cogs"></i> MONITORING SPARE PART</h3>
+                        <button class="btn btn-primary" onclick="openAddSparePartModal()" style="padding: 8px 15px; font-size: 14px;">
+                            <i class="fas fa-plus"></i> TAMBAH
+                        </button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table" id="sparePartTable">
+                            <thead>
+                                <tr>
+                                    <th>NO</th>
+                                    <th>MESIN</th>
+                                    <th>SPARE PART</th>
+                                    <th>LIFETIME (HM)</th>
+                                    <th>TERPAKAI (HM)</th>
+                                    <th>SISA (HM)</th>
+                                    <th>STATUS</th>
+                                    <th>REKOMENDASI</th>
+                                    <th>AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data akan diisi oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Edit Spare Part -->
+        <div id="sparePartModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalTitle">EDIT SPARE PART</h3>
+                    <button class="close-modal" onclick="closeSparePartModal()">&times;</button>
+                </div>
+                
+                <div class="hm-input-section" style="margin: 0;">
+                    <div class="hm-input-grid">
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-industry"></i> JENIS MESIN</label>
+                            <select class="hm-input" id="editMachineType">
+                                <option value="press">Mesin Press</option>
+                                <option value="digester">Digester</option>
+                                <option value="sludge">Sludge Centrifuge</option>
+                                <option value="ripple">Ripple Mill</option>
+                            </select>
+                        </div>
+                        
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-cog"></i> NAMA SPARE PART</label>
+                            <input type="text" class="hm-input" id="editPartName" placeholder="Nama spare part...">
+                        </div>
+                        
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-clock"></i> LIFETIME (HM)</label>
+                            <input type="number" class="hm-input" id="editLifetime" placeholder="Masa pakai dalam HM..." step="1" min="1">
+                        </div>
+                        
+                        <div class="hm-input-group">
+                            <label><i class="fas fa-hourglass-half"></i> TERPAKAI (HM)</label>
+                            <input type="number" class="hm-input" id="editUsed" placeholder="HM yang sudah terpakai..." step="1" min="0">
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="editIndex">
+                    <input type="hidden" id="editMachineTypeIndex">
+                    
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button class="btn btn-success" onclick="saveSparePart()">
+                            <i class="fas fa-save"></i> SIMPAN
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeSparePartModal()">
+                            <i class="fas fa-times"></i> BATAL
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>SISTEM PERHITUNGAN HM MESIN PMKS - FORMAT FDF</strong></p>
+            <p>PT. BANGKITGIAT USAHA MANDIRI - ASST JONIUS ABERTUS</p>
+            <p class="signature">© 2026 Sistem Terintegrasi - HM Akhir - HM Awal = HM Hari Ini</p>
+        </div>
+    </div>
+
+    <script>
+        // Data storage - DIKOSONGKAN
+        let mesinData = {
+            press: {
+                1: { nama: "Press 1", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                2: { nama: "Press 2", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                3: { nama: "Press 3", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                4: { nama: "Press 4", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" }
+            },
+            digester: {
+                1: { nama: "Digester 1", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                2: { nama: "Digester 2", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                3: { nama: "Digester 3", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                4: { nama: "Digester 4", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" }
+            },
+            sludge: {
+                3: { nama: "Sludge Centrifuge 3", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                4: { nama: "Sludge Centrifuge 4", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                5: { nama: "Sludge Centrifuge 5", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                6: { nama: "Sludge Centrifuge 6", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                7: { nama: "Sludge Centrifuge 7", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                8: { nama: "Sludge Centrifuge 8", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" }
+            },
+            ripple: {
+                1: { nama: "Ripple Mill 1", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                2: { nama: "Ripple Mill 2", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" },
+                3: { nama: "Ripple Mill 3", hmAwal: 0, hmAkhir: 0, totalHM: 0, status: "normal" }
+            }
+        };
+
+        let historyData = [];
+        let selectedMachine = null;
+        let selectedType = null;
+        let selectedNumber = null;
+        let selectedStatus = "normal";
+
+        // Spare part data - DIKOSONGKAN
+        let sparePartData = {
+            press: [
+                { name: "Bearing Screw Press", lifetime: 1000, used: 0 },
+                { name: "Screen Plate", lifetime: 2000, used: 0 },
+                { name: "Hydraulic Pump", lifetime: 1500, used: 0 }
+            ],
+            digester: [
+                { name: "Paddle Arm", lifetime: 800, used: 0 },
+                { name: "Heating Coil", lifetime: 1200, used: 0 },
+                { name: "Gear Box", lifetime: 2000, used: 0 }
+            ],
+            sludge: [
+                { name: "Bowl Assembly", lifetime: 500, used: 0 },
+                { name: "Drive Belt", lifetime: 300, used: 0 },
+                { name: "Bearing Set", lifetime: 400, used: 0 }
+            ],
+            ripple: [
+                { name: "Hammer Plate", lifetime: 600, used: 0 },
+                { name: "Screen Plate", lifetime: 800, used: 0 },
+                { name: "Rotor Assembly", lifetime: 1000, used: 0 }
+            ]
+        };
+
+        // Initialize
+        function initApp() {
+            // Set current date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('operasiDate').value = today;
+            
+            // Load summary table
+            loadSummaryTable();
+            
+            // Load history
+            loadHistory();
+            
+            // Load spare part table
+            loadSparePartTable();
+            
+            // Calculate totals
+            updateTotals();
+            
+            // Setup Enter key events
+            setupEnterKeyEvents();
+        }
+
+        // Setup Enter Key Events
+        function setupEnterKeyEvents() {
+            // Input field Enter key handlers
+            document.getElementById('hmAwal').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('hmAkhir').focus();
+                }
+            });
+            
+            document.getElementById('hmAkhir').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    hitungHM();
+                }
+            });
+            
+            document.getElementById('hmNotes').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    simpanData();
+                }
+            });
+            
+            // Spare part modal Enter key handlers
+            document.getElementById('editPartName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('editLifetime').focus();
+                }
+            });
+            
+            document.getElementById('editLifetime').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('editUsed').focus();
+                }
+            });
+            
+            document.getElementById('editUsed').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveSparePart();
+                }
+            });
+        }
+
+        // Switch Tabs
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Activate clicked button
+            event.currentTarget.classList.add('active');
+            
+            // Update report number based on date
+            if (tabName === 'report') {
+                const now = new Date();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                document.getElementById('reportNo').value = `HM/PKS/${year}/${month}/001`;
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            // Remove existing notification
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'danger' ? 'times-circle' : 'info-circle'}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+
+        // Select Status
+        function selectStatus(status) {
+            selectedStatus = status;
+            
+            // Remove active class from all status buttons
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to selected button
+            event.currentTarget.classList.add('active');
+            
+            showNotification(`Status mesin diatur ke: ${status.toUpperCase()}`, 'info');
+        }
+
+        // Select Machine
+        function selectMachine(type, number) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.machine-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.remove('warning');
+                btn.classList.remove('danger');
+            });
+            
+            // Add active class to selected button
+            event.currentTarget.classList.add('active');
+            
+            // Set selected machine
+            selectedType = type;
+            selectedNumber = number;
+            selectedMachine = mesinData[type][number];
+            
+            // Update machine label
+            document.getElementById('selectedMachine').value = selectedMachine.nama;
+            document.getElementById('machineLabel').innerHTML = `<i class="fas fa-industry"></i> ${selectedMachine.nama}`;
+            
+            // Update input fields with last values
+            document.getElementById('hmAwal').value = selectedMachine.hmAkhir > 0 ? selectedMachine.hmAkhir.toFixed(2) : '';
+            document.getElementById('hmAkhir').value = '';
+            document.getElementById('hmAkhir').focus();
+            
+            // Set status based on machine status
+            selectStatus(selectedMachine.status);
+            updateStatusButtons(selectedMachine.status);
+            
+            // Reset results
+            document.getElementById('resultSelisih').innerHTML = `0.00<span class="result-unit"> jam</span>`;
+            
+            showNotification(`Mesin ${selectedMachine.nama} dipilih`, 'info');
+        }
+
+        // Update status buttons
+        function updateStatusButtons(status) {
+            // Remove active class from all status buttons
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to current status
+            document.querySelector(`.status-btn.${status}`).classList.add('active');
+            selectedStatus = status;
+        }
+
+        // Calculate HM
+        function hitungHM() {
+            if (!selectedMachine) {
+                showNotification('Pilih mesin terlebih dahulu!', 'warning');
+                return;
+            }
+            
+            const hmAwal = parseFloat(document.getElementById('hmAwal').value) || 0;
+            const hmAkhir = parseFloat(document.getElementById('hmAkhir').value) || 0;
+            
+            if (hmAwal === 0 || hmAkhir === 0) {
+                showNotification('Harap isi HM Awal dan HM Akhir!', 'warning');
+                return;
+            }
+            
+            if (hmAkhir <= hmAwal) {
+                showNotification('HM Akhir harus lebih besar dari HM Awal!', 'warning');
+                return;
+            }
+            
+            // Calculate difference
+            const selisih = hmAkhir - hmAwal;
+            
+            // Update result display
+            document.getElementById('resultSelisih').innerHTML = `${selisih.toFixed(2)}<span class="result-unit"> jam</span>`;
+            
+            showNotification(`HM dihitung: ${selisih.toFixed(2)} jam`, 'success');
+            
+            // Auto focus to notes field
+            document.getElementById('hmNotes').focus();
+        }
+
+        // Hitung Semua Mesin
+        function hitungSemua() {
+            if (!confirm('Hitung semua mesin secara otomatis?')) return;
+            
+            // Calculate for all machines
+            let totalSelisih = 0;
+            let mesinDihitung = 0;
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    const machine = machines[number];
+                    if (machine.hmAkhir > 0 && machine.hmAwal > 0) {
+                        const selisih = machine.hmAkhir - machine.hmAwal;
+                        if (selisih > 0) {
+                            machine.totalHM += selisih;
+                            totalSelisih += selisih;
+                            mesinDihitung++;
+                        }
+                    }
+                });
+            });
+            
+            // Update summary table
+            loadSummaryTable();
+            
+            // Update totals
+            updateTotals();
+            
+            if (mesinDihitung > 0) {
+                showNotification(`Berhasil menghitung ${mesinDihitung} mesin. Total HM: ${totalSelisih.toFixed(2)} jam`, 'success');
+            } else {
+                showNotification('Tidak ada data HM yang valid untuk dihitung', 'warning');
+            }
+        }
+
+        // Save Data
+        function simpanData() {
+            if (!selectedMachine) {
+                showNotification('Pilih mesin terlebih dahulu!', 'warning');
+                return;
+            }
+            
+            const hmAwal = parseFloat(document.getElementById('hmAwal').value) || 0;
+            const hmAkhir = parseFloat(document.getElementById('hmAkhir').value) || 0;
+            const tanggal = document.getElementById('operasiDate').value;
+            const notes = document.getElementById('hmNotes').value;
+            
+            if (hmAwal === 0 || hmAkhir === 0) {
+                showNotification('Harap isi HM Awal dan HM Akhir!', 'warning');
+                return;
+            }
+            
+            if (!tanggal) {
+                showNotification('Harap isi tanggal operasi!', 'warning');
+                return;
+            }
+            
+            if (hmAkhir <= hmAwal) {
+                showNotification('HM Akhir harus lebih besar dari HM Awal!', 'warning');
+                return;
+            }
+            
+            const selisih = hmAkhir - hmAwal;
+            
+            // Create record
+            const record = {
+                id: Date.now(),
+                tanggal: tanggal,
+                machineType: selectedType,
+                machineNumber: selectedNumber,
+                machineName: selectedMachine.nama,
+                hmAwal: hmAwal,
+                hmAkhir: hmAkhir,
+                selisih: selisih,
+                totalHM: selectedMachine.totalHM + selisih,
+                status: selectedStatus,
+                notes: notes,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Add to history
+            historyData.unshift(record);
+            
+            // Update machine data
+            mesinData[selectedType][selectedNumber].hmAwal = hmAwal;
+            mesinData[selectedType][selectedNumber].hmAkhir = hmAkhir;
+            mesinData[selectedType][selectedNumber].totalHM += selisih;
+            mesinData[selectedType][selectedNumber].status = selectedStatus;
+            
+            // Update spare part usage
+            updateSparePartUsage(selectedType, selisih);
+            
+            showNotification(`Data ${selectedMachine.nama} berhasil disimpan!`, 'success');
+            
+            // Reload tables
+            loadSummaryTable();
+            loadHistory();
+            loadSparePartTable();
+            updateTotals();
+            
+            // Reset form
+            document.getElementById('hmAkhir').value = '';
+            document.getElementById('hmNotes').value = '';
+            document.getElementById('resultSelisih').innerHTML = `0.00<span class="result-unit"> jam</span>`;
+            
+            // Auto focus to HM Awal for next input
+            document.getElementById('hmAwal').focus();
+        }
+
+        // Update Spare Part Usage
+        function updateSparePartUsage(type, hours) {
+            if (sparePartData[type]) {
+                sparePartData[type].forEach(part => {
+                    part.used += hours;
+                    if (part.used > part.lifetime) {
+                        part.used = part.lifetime;
+                    }
+                });
+            }
+        }
+
+        // Load Summary Table
+        function loadSummaryTable() {
+            const tableBody = document.getElementById('summaryTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            let counter = 1;
+            let activeMachines = 0;
+            
+            // Loop through all machine types
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    const machine = machines[number];
+                    
+                    // Check if machine has data
+                    const hasData = machine.totalHM > 0 || machine.hmAkhir > 0;
+                    if (!hasData) {
+                        return; // Skip machines with no data
+                    }
+                    
+                    activeMachines++;
+                    
+                    let statusBadge = '';
+                    if (machine.status === 'normal') {
+                        statusBadge = '<span style="background: #4CAF50; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">NORMAL</span>';
+                    } else if (machine.status === 'warning') {
+                        statusBadge = '<span style="background: #FF9800; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">WARNING</span>';
+                    } else {
+                        statusBadge = '<span style="background: #F44336; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">CRITICAL</span>';
+                    }
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${counter}</td>
+                        <td><strong>${getMachineTypeName(type)}</strong></td>
+                        <td>${machine.nama}</td>
+                        <td>${machine.hmAkhir > 0 ? machine.hmAkhir.toFixed(2) : '0.00'}</td>
+                        <td><span style="color: var(--success); font-weight: 700;">${machine.totalHM.toFixed(2)}</span></td>
+                        <td>${statusBadge}</td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                    counter++;
+                });
+            });
+            
+            if (activeMachines === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="6" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-industry" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                        Belum ada data mesin. Silakan input data terlebih dahulu.
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            }
+            
+            document.getElementById('totalMesin').textContent = activeMachines;
+            document.getElementById('totalMesinBadge').innerHTML = `<i class="fas fa-server"></i> ${activeMachines} Mesin`;
+            document.getElementById('resultMesin').innerHTML = `${activeMachines}<span class="result-unit"> unit</span>`;
+        }
+
+        // Get Machine Type Name
+        function getMachineTypeName(type) {
+            const names = {
+                press: 'MESIN PRESS',
+                digester: 'DIGESTER',
+                sludge: 'SLUDGE CENTRIFUGE',
+                ripple: 'RIPPLE MILL'
+            };
+            return names[type] || type;
+        }
+
+        // Get Machine Type Display Name
+        function getMachineDisplayName(type) {
+            const names = {
+                press: 'Mesin Press',
+                digester: 'Digester',
+                sludge: 'Sludge Centrifuge',
+                ripple: 'Ripple Mill'
+            };
+            return names[type] || type;
+        }
+
+        // Update Totals
+        function updateTotals() {
+            let totalHariIni = 0;
+            let totalCumulative = 0;
+            let activeMachines = 0;
+            
+            // Calculate totals from history for today
+            const today = new Date().toISOString().split('T')[0];
+            historyData.forEach(record => {
+                if (record.tanggal === today) {
+                    totalHariIni += record.selisih;
+                }
+            });
+            
+            // Calculate total cumulative HM and count active machines
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    totalCumulative += machines[number].totalHM;
+                    if (machines[number].totalHM > 0 || machines[number].hmAkhir > 0) {
+                        activeMachines++;
+                    }
+                });
+            });
+            
+            // Update displays
+            document.getElementById('totalHariIni').textContent = totalHariIni.toFixed(2);
+            document.getElementById('totalCumulative').textContent = totalCumulative.toFixed(2);
+            document.getElementById('resultHariIni').innerHTML = `${totalHariIni.toFixed(2)}<span class="result-unit"> jam</span>`;
+            document.getElementById('resultTotal').innerHTML = `${totalCumulative.toFixed(2)}<span class="result-unit"> jam</span>`;
+            document.getElementById('resultMesin').innerHTML = `${activeMachines}<span class="result-unit"> unit</span>`;
+            document.getElementById('totalMesin').textContent = activeMachines;
+            document.getElementById('totalMesinBadge').innerHTML = `<i class="fas fa-server"></i> ${activeMachines} Mesin`;
+        }
+
+        // Load History
+        function loadHistory() {
+            const tableBody = document.getElementById('historyTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            if (historyData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="9" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-history" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                        Belum ada data riwayat
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            historyData.slice(0, 50).forEach(record => {
+                const row = document.createElement('tr');
+                
+                let statusBadge = '';
+                if (record.status === 'normal') {
+                    statusBadge = '<span style="background: #4CAF50; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px;">NORMAL</span>';
+                } else if (record.status === 'warning') {
+                    statusBadge = '<span style="background: #FF9800; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px;">WARNING</span>';
+                } else {
+                    statusBadge = '<span style="background: #F44336; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px;">CRITICAL</span>';
+                }
+                
+                row.innerHTML = `
+                    <td>${formatDate(record.tanggal)}</td>
+                    <td>${record.machineName}</td>
+                    <td>${record.hmAwal.toFixed(2)}</td>
+                    <td>${record.hmAkhir.toFixed(2)}</td>
+                    <td><strong style="color: var(--primary);">${record.selisih.toFixed(2)}</strong></td>
+                    <td><strong style="color: var(--success);">${record.totalHM.toFixed(2)}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>${record.notes || '-'}</td>
+                    <td>
+                        <button onclick="deleteHistory(${record.id})" style="background: #FFEBEE; color: #F44336; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Filter History
+        function filterHistory() {
+            const filterMachine = document.getElementById('filterMachine').value;
+            const filterDate = document.getElementById('filterDate').value;
+            const tableBody = document.getElementById('historyTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            let filteredData = historyData;
+            
+            if (filterMachine !== 'all') {
+                filteredData = filteredData.filter(record => record.machineType === filterMachine);
+            }
+            
+            if (filterDate) {
+                filteredData = filteredData.filter(record => record.tanggal === filterDate);
+            }
+            
+            if (filteredData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="9" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-search" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                        Tidak ada data untuk filter yang dipilih
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            filteredData.slice(0, 50).forEach(record => {
+                const row = document.createElement('tr');
+                
+                let statusBadge = '';
+                if (record.status === 'normal') {
+                    statusBadge = '<span style="background: #4CAF50; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px;">NORMAL</span>';
+                } else if (record.status === 'warning') {
+                    statusBadge = '<span style="background: #FF9800; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px;">WARNING</span>';
+                } else {
+                    statusBadge = '<span style="background: #F44336; color: white; padding: 3px 8px; border-radius: 10px; font-size: 10px;">CRITICAL</span>';
+                }
+                
+                row.innerHTML = `
+                    <td>${formatDate(record.tanggal)}</td>
+                    <td>${record.machineName}</td>
+                    <td>${record.hmAwal.toFixed(2)}</td>
+                    <td>${record.hmAkhir.toFixed(2)}</td>
+                    <td><strong style="color: var(--primary);">${record.selisih.toFixed(2)}</strong></td>
+                    <td><strong style="color: var(--success);">${record.totalHM.toFixed(2)}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>${record.notes || '-'}</td>
+                    <td>
+                        <button onclick="deleteHistory(${record.id})" style="background: #FFEBEE; color: #F44336; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Delete History
+        function deleteHistory(recordId) {
+            if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+            
+            const index = historyData.findIndex(r => r.id === recordId);
+            if (index !== -1) {
+                const record = historyData[index];
+                
+                // Subtract from machine total
+                if (mesinData[record.machineType] && mesinData[record.machineType][record.machineNumber]) {
+                    mesinData[record.machineType][record.machineNumber].totalHM -= record.selisih;
+                }
+                
+                // Subtract from spare part usage
+                if (sparePartData[record.machineType]) {
+                    sparePartData[record.machineType].forEach(part => {
+                        part.used -= record.selisih;
+                        if (part.used < 0) part.used = 0;
+                    });
+                }
+                
+                historyData.splice(index, 1);
+                
+                showNotification('Data riwayat berhasil dihapus!', 'success');
+                loadHistory();
+                loadSummaryTable();
+                loadSparePartTable();
+                updateTotals();
+            }
+        }
+
+        // Load Spare Part Table
+        function loadSparePartTable() {
+            const tableBody = document.getElementById('sparePartTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            
+            let counter = 1;
+            let hasData = false;
+            
+            // Process each machine type
+            Object.keys(sparePartData).forEach((type) => {
+                sparePartData[type].forEach((part, partIndex) => {
+                    hasData = true;
+                    const remaining = part.lifetime - part.used;
+                    
+                    let status = "NORMAL";
+                    let statusColor = "#4CAF50";
+                    let recommendation = "Normal";
+                    
+                    if (remaining <= 0) {
+                        status = "REPLACE NOW";
+                        statusColor = "#F44336";
+                        recommendation = "SEGERA GANTI!";
+                    } else if (remaining < 50) {
+                        status = "CRITICAL";
+                        statusColor = "#F44336";
+                        recommendation = "SEGERA GANTI!";
+                    } else if (remaining < 200) {
+                        status = "WARNING";
+                        statusColor = "#FF9800";
+                        recommendation = `Ganti dalam ${Math.ceil(remaining)} HM`;
+                    } else if (remaining < 500) {
+                        recommendation = `Monitor, sisa ${Math.ceil(remaining)} HM`;
+                    }
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${counter}</td>
+                        <td>${getMachineDisplayName(type)}</td>
+                        <td>${part.name}</td>
+                        <td>${part.lifetime}</td>
+                        <td>${part.used.toFixed(0)}</td>
+                        <td>${remaining.toFixed(0)}</td>
+                        <td>
+                            <span style="background: ${statusColor}; color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">
+                                ${status}
+                            </span>
+                        </td>
+                        <td>${recommendation}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn edit" onclick="editSparePart('${type}', ${partIndex})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete" onclick="deleteSparePart('${type}', ${partIndex})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                    counter++;
+                });
+            });
+            
+            if (!hasData) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="9" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-cogs" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                        Belum ada data spare part. Klik "TAMBAH" untuk menambah data.
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+
+        // Open Add Spare Part Modal
+        function openAddSparePartModal() {
+            document.getElementById('modalTitle').textContent = 'TAMBAH SPARE PART BARU';
+            document.getElementById('editMachineType').value = 'press';
+            document.getElementById('editPartName').value = '';
+            document.getElementById('editLifetime').value = '';
+            document.getElementById('editUsed').value = '0';
+            document.getElementById('editIndex').value = '-1';
+            document.getElementById('editMachineTypeIndex').value = '';
+            
+            document.getElementById('sparePartModal').style.display = 'block';
+            
+            // Auto focus to part name
+            setTimeout(() => {
+                document.getElementById('editPartName').focus();
+            }, 100);
+        }
+
+        // Edit Spare Part
+        function editSparePart(machineType, partIndex) {
+            const part = sparePartData[machineType][partIndex];
+            
+            document.getElementById('modalTitle').textContent = 'EDIT SPARE PART';
+            document.getElementById('editMachineType').value = machineType;
+            document.getElementById('editPartName').value = part.name;
+            document.getElementById('editLifetime').value = part.lifetime;
+            document.getElementById('editUsed').value = part.used;
+            document.getElementById('editIndex').value = partIndex;
+            document.getElementById('editMachineTypeIndex').value = machineType;
+            
+            document.getElementById('sparePartModal').style.display = 'block';
+            
+            // Auto focus to part name
+            setTimeout(() => {
+                document.getElementById('editPartName').focus();
+            }, 100);
+        }
+
+        // Close Spare Part Modal
+        function closeSparePartModal() {
+            document.getElementById('sparePartModal').style.display = 'none';
+        }
+
+        // Save Spare Part
+        function saveSparePart() {
+            const machineType = document.getElementById('editMachineType').value;
+            const partName = document.getElementById('editPartName').value.trim();
+            const lifetime = parseInt(document.getElementById('editLifetime').value);
+            const used = parseInt(document.getElementById('editUsed').value) || 0;
+            const partIndex = parseInt(document.getElementById('editIndex').value);
+            const oldMachineType = document.getElementById('editMachineTypeIndex').value;
+            
+            if (!partName) {
+                showNotification('Nama spare part harus diisi!', 'warning');
+                document.getElementById('editPartName').focus();
+                return;
+            }
+            
+            if (!lifetime || lifetime <= 0) {
+                showNotification('Lifetime harus diisi dengan angka positif!', 'warning');
+                document.getElementById('editLifetime').focus();
+                return;
+            }
+            
+            if (used < 0) {
+                showNotification('HM terpakai tidak boleh negatif!', 'warning');
+                document.getElementById('editUsed').focus();
+                return;
+            }
+            
+            if (used > lifetime) {
+                showNotification('HM terpakai tidak boleh melebihi lifetime!', 'warning');
+                document.getElementById('editUsed').focus();
+                return;
+            }
+            
+            if (partIndex === -1) {
+                // Add new spare part
+                if (!sparePartData[machineType]) {
+                    sparePartData[machineType] = [];
+                }
+                
+                sparePartData[machineType].push({
+                    name: partName,
+                    lifetime: lifetime,
+                    used: used
+                });
+                
+                showNotification('Spare part berhasil ditambahkan!', 'success');
+            } else {
+                // Edit existing spare part
+                if (oldMachineType !== machineType) {
+                    // Remove from old machine type
+                    sparePartData[oldMachineType].splice(partIndex, 1);
+                    
+                    // Add to new machine type
+                    if (!sparePartData[machineType]) {
+                        sparePartData[machineType] = [];
+                    }
+                    
+                    sparePartData[machineType].push({
+                        name: partName,
+                        lifetime: lifetime,
+                        used: used
+                    });
+                } else {
+                    // Update in same machine type
+                    sparePartData[machineType][partIndex] = {
+                        name: partName,
+                        lifetime: lifetime,
+                        used: used
+                    };
+                }
+                
+                showNotification('Spare part berhasil diupdate!', 'success');
+            }
+            
+            closeSparePartModal();
+            loadSparePartTable();
+        }
+
+        // Delete Spare Part
+        function deleteSparePart(machineType, partIndex) {
+            if (!confirm('Apakah Anda yakin ingin menghapus spare part ini?')) return;
+            
+            sparePartData[machineType].splice(partIndex, 1);
+            
+            showNotification('Spare part berhasil dihapus!', 'success');
+            loadSparePartTable();
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        // Get period text
+        function getPeriodText(period, date) {
+            const today = new Date(date);
+            switch(period) {
+                case 'daily':
+                    return `Harian - ${formatDate(date)}`;
+                case 'weekly':
+                    const weekStart = new Date(today);
+                    weekStart.setDate(today.getDate() - today.getDay());
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    return `Mingguan ${formatDate(weekStart.toISOString().split('T')[0])} - ${formatDate(weekEnd.toISOString().split('T')[0])}`;
+                case 'monthly':
+                    return `Bulanan - ${today.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`;
+                case 'custom':
+                    return `Kustom - ${formatDate(date)}`;
+                default:
+                    return formatDate(date);
+            }
+        }
+
+        // Preview Report
+        function previewReport() {
+            const period = document.getElementById('reportPeriod').value;
+            const unit = document.getElementById('reportUnit').value;
+            const asisten = document.getElementById('reportAsisten').value;
+            const noLaporan = document.getElementById('reportNo').value;
+            
+            const today = new Date();
+            const periodeText = getPeriodText(period, today);
+            
+            // Calculate totals
+            let totalHariIni = 0;
+            let totalCumulative = 0;
+            let totalMesin = 0;
+            
+            historyData.forEach(record => {
+                if (record.tanggal === today.toISOString().split('T')[0]) {
+                    totalHariIni += record.selisih;
+                }
+            });
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    totalCumulative += machines[number].totalHM;
+                    if (machines[number].totalHM > 0 || machines[number].hmAkhir > 0) {
+                        totalMesin++;
+                    }
+                });
+            });
+            
+            let content = `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; padding: 0 5px; width: 100%; max-width: 100%; box-sizing: border-box;">
+                    <!-- Header -->
+                    <div style="text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px double #000; width: 100%;">
+                        <h1 style="color: #0D47A1; margin-bottom: 8px; font-size: 20px; width: 100%;">LAPORAN FDF – MONITORING & PERHITUNGAN HM MESIN</h1>
+                        <h2 style="color: #1565C0; margin-bottom: 8px; font-size: 16px; width: 100%;">${unit}</h2>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 11px; flex-wrap: wrap; width: 100%;">
+                            <div style="text-align: left; width: 48%;">
+                                <p><strong>Periode:</strong> ${periodeText}</p>
+                                <p><strong>No. Laporan:</strong> ${noLaporan}</p>
+                            </div>
+                            <div style="text-align: right; width: 48%;">
+                                <p><strong>Asisten:</strong> ${asisten}</p>
+                                <p><strong>Tanggal Cetak:</strong> ${formatDate(today.toISOString().split('T')[0])}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Summary Information -->
+                    <div style="margin-bottom: 25px; background: #F5F7FA; padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); width: 100%;">
+                        <h3 style="color: var(--primary); margin-bottom: 8px; font-size: 15px;">
+                            <i class="fas fa-info-circle"></i> RINGKASAN UMUM
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center; width: 100%;">
+                            <div style="background: white; padding: 8px; border-radius: 5px; border: 1px solid #E0E0E0; width: 100%;">
+                                <div style="font-size: 11px; color: #666;">Total Mesin</div>
+                                <div style="font-size: 18px; font-weight: bold; color: var(--primary);">${totalMesin}</div>
+                            </div>
+                            <div style="background: white; padding: 8px; border-radius: 5px; border: 1px solid #E0E0E0; width: 100%;">
+                                <div style="font-size: 11px; color: #666;">HM Hari Ini</div>
+                                <div style="font-size: 18px; font-weight: bold; color: var(--success);">${totalHariIni.toFixed(2)}</div>
+                            </div>
+                            <div style="background: white; padding: 8px; border-radius: 5px; border: 1px solid #E0E0E0; width: 100%;">
+                                <div style="font-size: 11px; color: #666;">Total Kumulatif</div>
+                                <div style="font-size: 18px; font-weight: bold; color: var(--warning);">${totalCumulative.toFixed(2)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- HM Data Table -->
+                    <div style="margin-bottom: 25px; width: 100%;">
+                        <h3 style="color: #0D47A1; margin-bottom: 12px; border-bottom: 2px solid #E0E0E0; padding-bottom: 4px; font-size: 15px; width: 100%;">
+                            <i class="fas fa-table"></i> DATA HM MESIN PER UNIT
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; font-size: 8px; margin-bottom: 15px; table-layout: fixed;">
+                            <thead>
+                                <tr style="background: #E3F2FD;">
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 6%;">NO</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 20%;">JENIS MESIN</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 12%;">UNIT</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 12%;">HM AWAL</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 12%;">HM AKHIR</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 12%;">SELISIH</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 14%;">TOTAL HM</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 12%;">STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            // Add machine data
+            let counter = 1;
+            let hasMachineData = false;
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    const machine = machines[number];
+                    
+                    // Only show machines with data
+                    if (machine.totalHM === 0 && machine.hmAkhir === 0) {
+                        return;
+                    }
+                    
+                    hasMachineData = true;
+                    const selisih = machine.hmAkhir - machine.hmAwal;
+                    
+                    let status = "NORMAL";
+                    let statusColor = "#4CAF50";
+                    
+                    if (machine.status === 'warning') {
+                        status = "WARNING";
+                        statusColor = "#FF9800";
+                    } else if (machine.status === 'danger') {
+                        status = "CRITICAL";
+                        statusColor = "#F44336";
+                    }
+                    
+                    content += `
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">${counter}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">${getMachineTypeName(type)}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">${machine.nama}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">${machine.hmAwal.toFixed(2)}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">${machine.hmAkhir.toFixed(2)}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold;">${selisih.toFixed(2)}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center; color: #2E7D32; font-weight: bold;">${machine.totalHM.toFixed(2)}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                <span style="background: ${statusColor}; color: white; padding: 2px 5px; border-radius: 6px; font-size: 7px;">
+                                    ${status}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                    counter++;
+                });
+            });
+            
+            if (!hasMachineData) {
+                content += `
+                    <tr>
+                        <td colspan="8" style="border: 1px solid #000; padding: 15px; text-align: center; color: #999;">
+                            <i class="fas fa-industry"></i> Belum ada data mesin
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            content += `
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Spare Part Summary -->
+                    <div style="margin-bottom: 25px; width: 100%;">
+                        <h3 style="color: #0D47A1; margin-bottom: 12px; border-bottom: 2px solid #E0E0E0; padding-bottom: 4px; font-size: 15px; width: 100%;">
+                            <i class="fas fa-cogs"></i> RINGKASAN SPARE PART
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; font-size: 8px; margin-bottom: 15px; table-layout: fixed;">
+                            <thead>
+                                <tr style="background: #E3F2FD;">
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 6%;">NO</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 20%;">MESIN</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 25%;">SPARE PART</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 12%;">LIFETIME</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 12%;">TERPAKAI</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 12%;">SISA</th>
+                                    <th style="border: 1px solid #000; padding: 5px; text-align: center; width: 13%;">STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            // Add spare part data
+            let spareCounter = 1;
+            let hasSparePartData = false;
+            
+            Object.keys(sparePartData).forEach(type => {
+                sparePartData[type].forEach(part => {
+                    if (part.used > 0 || part.lifetime > 0) {
+                        hasSparePartData = true;
+                        const remaining = part.lifetime - part.used;
+                        
+                        let status = "NORMAL";
+                        let statusColor = "#4CAF50";
+                        
+                        if (remaining <= 0) {
+                            status = "REPLACE NOW";
+                            statusColor = "#F44336";
+                        } else if (remaining < 50) {
+                            status = "CRITICAL";
+                            statusColor = "#F44336";
+                        } else if (remaining < 200) {
+                            status = "WARNING";
+                            statusColor = "#FF9800";
+                        }
+                        
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 4px; text-align: center;">${spareCounter}</td>
+                                <td style="border: 1px solid #000; padding: 4px; text-align: center;">${getMachineDisplayName(type)}</td>
+                                <td style="border: 1px solid #000; padding: 4px; text-align: center;">${part.name}</td>
+                                <td style="border: 1px solid #000; padding: 4px; text-align: center;">${part.lifetime}</td>
+                                <td style="border: 1px solid #000; padding: 4px; text-align: center;">${part.used.toFixed(0)}</td>
+                                <td style="border: 1px solid #000; padding: 4px; text-align: center;">${remaining.toFixed(0)}</td>
+                                <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                    <span style="background: ${statusColor}; color: white; padding: 2px 5px; border-radius: 6px; font-size: 7px;">
+                                        ${status}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                        spareCounter++;
+                    }
+                });
+            });
+            
+            if (!hasSparePartData) {
+                content += `
+                    <tr>
+                        <td colspan="7" style="border: 1px solid #000; padding: 15px; text-align: center; color: #999;">
+                            <i class="fas fa-cogs"></i> Belum ada data spare part
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            content += `
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div style="margin-bottom: 20px; padding: 12px; background: #FFF3E0; border-radius: 6px; border-left: 4px solid var(--warning); width: 100%; box-sizing: border-box;">
+                        <h4 style="color: var(--warning); margin-bottom: 8px; font-size: 13px;">
+                            <i class="fas fa-exclamation-triangle"></i> CATATAN PENTING
+                        </h4>
+                        <ul style="font-size: 10px; margin-left: 12px; word-wrap: break-word; overflow-wrap: break-word; width: 100%; padding-right: 5px;">
+                            <li style="margin-bottom: 4px; width: 100%;">Rumus perhitungan HM: HM Hari Ini = HM Akhir - HM Awal</li>
+                            <li style="margin-bottom: 4px; width: 100%;">Total HM = Kumulatif + HM Hari Ini</li>
+                            <li style="margin-bottom: 4px; width: 100%;">Status CRITICAL memerlukan tindakan segera</li>
+                            <li style="margin-bottom: 4px; width: 100%;">Laporan ini valid untuk periode yang ditentukan</li>
+                            <li style="margin-bottom: 4px; width: 100%;">HM diukur dalam satuan jam (hours)</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #999; font-size: 8px; color: #666; text-align: center; width: 100%;">
+                        <p>Laporan ini digenerate secara otomatis oleh Sistem HM Mesin PKS - PT. Bangkitgiat Usaha Mandiri</p>
+                        <p>Versi: 1.0 | Generated by: ${asisten} | Page 1 of 1</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('reportPreview').innerHTML = content;
+            showNotification('Preview laporan berhasil ditampilkan!', 'success');
+        }
+
+        // Generate FDF Report (PDF)
+        function generateFDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Set metadata
+            doc.setProperties({
+                title: 'Laporan HM Mesin PKS',
+                subject: 'Hour Meter Report',
+                author: 'PT. Bangkitgiat Usaha Mandiri',
+                creator: 'Jonius Abertus'
+            });
+            
+            // Data for tables
+            const period = document.getElementById('reportPeriod').value;
+            const unit = document.getElementById('reportUnit').value;
+            const asisten = document.getElementById('reportAsisten').value;
+            const noLaporan = document.getElementById('reportNo').value;
+            const today = new Date();
+            const periodeText = getPeriodText(period, today);
+            
+            // Header - FULL WIDTH
+            doc.setFillColor(13, 71, 161);
+            doc.rect(0, 0, 210, 25, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('LAPORAN FDF – MONITORING & PERHITUNGAN HM MESIN', 105, 12, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text(unit, 105, 20, { align: 'center' });
+            
+            // Information section - SYMMETRICAL MARGINS
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            
+            let yPos = 30;
+            
+            // Left side information
+            doc.text(`Periode: ${periodeText}`, 15, yPos);
+            doc.text(`No. Laporan: ${noLaporan}`, 15, yPos + 6);
+            
+            // Right side information - SYMMETRICAL
+            const rightX = 210 - 15 - 80; // 80mm from right
+            doc.text(`Asisten: ${asisten}`, rightX, yPos);
+            doc.text(`Tanggal Cetak: ${formatDate(today.toISOString().split('T')[0])}`, rightX, yPos + 6);
+            
+            // Summary boxes - FULL WIDTH with SYMMETRICAL spacing
+            yPos += 15;
+            doc.setDrawColor(13, 71, 161);
+            doc.setLineWidth(0.5);
+            doc.rect(15, yPos, 180, 12);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.text('RINGKASAN UMUM', 105, yPos + 7, { align: 'center' });
+            
+            yPos += 15;
+            
+            // Calculate totals for summary
+            let totalHariIni = 0;
+            let totalCumulative = 0;
+            let totalMesin = 0;
+            
+            historyData.forEach(record => {
+                if (record.tanggal === today.toISOString().split('T')[0]) {
+                    totalHariIni += record.selisih;
+                }
+            });
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    totalCumulative += machines[number].totalHM;
+                    if (machines[number].totalHM > 0 || machines[number].hmAkhir > 0) {
+                        totalMesin++;
+                    }
+                });
+            });
+            
+            // Summary boxes - SYMMETRICAL with equal spacing
+            const boxWidth = 50;
+            const boxHeight = 18;
+            const totalWidth = boxWidth * 3 + 20; // 3 boxes with 10mm spacing
+            const startX = (210 - totalWidth) / 2; // Center the boxes
+            
+            // Box 1: Total Mesin (Left)
+            doc.setDrawColor(13, 71, 161);
+            doc.setFillColor(227, 242, 253);
+            doc.rect(startX, yPos, boxWidth, boxHeight, 'FD');
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(8);
+            doc.text('TOTAL MESIN', startX + boxWidth/2, yPos + 7, { align: 'center' });
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(totalMesin.toString(), startX + boxWidth/2, yPos + 14, { align: 'center' });
+            
+            // Box 2: HM Hari Ini (Center)
+            doc.setDrawColor(76, 175, 80);
+            doc.setFillColor(232, 245, 233);
+            doc.rect(startX + boxWidth + 10, yPos, boxWidth, boxHeight, 'FD');
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text('HM HARI INI', startX + boxWidth + 10 + boxWidth/2, yPos + 7, { align: 'center' });
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(totalHariIni.toFixed(2), startX + boxWidth + 10 + boxWidth/2, yPos + 14, { align: 'center' });
+            
+            // Box 3: Total Kumulatif (Right) - SYMMETRICAL
+            doc.setDrawColor(255, 152, 0);
+            doc.setFillColor(255, 248, 225);
+            doc.rect(startX + (boxWidth + 10) * 2, yPos, boxWidth, boxHeight, 'FD');
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text('TOTAL KUMULATIF', startX + (boxWidth + 10) * 2 + boxWidth/2, yPos + 7, { align: 'center' });
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(totalCumulative.toFixed(2), startX + (boxWidth + 10) * 2 + boxWidth/2, yPos + 14, { align: 'center' });
+            
+            // HM Data Table - FULL WIDTH with SYMMETRICAL margins
+            yPos += 25;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(13, 71, 161);
+            doc.text('DATA HM MESIN PER UNIT', 15, yPos);
+            
+            yPos += 5;
+            
+            // Prepare table data
+            const tableData = [];
+            let counter = 1;
+            
+            Object.keys(mesinData).forEach(type => {
+                const machines = mesinData[type];
+                Object.keys(machines).forEach(number => {
+                    const machine = machines[number];
+                    
+                    // Only include machines with data
+                    if (machine.totalHM === 0 && machine.hmAkhir === 0) {
+                        return;
+                    }
+                    
+                    const selisih = machine.hmAkhir - machine.hmAwal;
+                    
+                    let status = "NORMAL";
+                    if (machine.status === 'warning') status = "WARNING";
+                    if (machine.status === 'danger') status = "CRITICAL";
+                    
+                    tableData.push([
+                        counter.toString(),
+                        getMachineTypeName(type),
+                        machine.nama,
+                        machine.hmAwal.toFixed(2),
+                        machine.hmAkhir.toFixed(2),
+                        selisih.toFixed(2),
+                        machine.totalHM.toFixed(2),
+                        status
+                    ]);
+                    counter++;
+                });
+            });
+            
+            if (tableData.length > 0) {
+                // AutoTable configuration - FULL WIDTH with SYMMETRICAL margins
+                doc.autoTable({
+                    startY: yPos,
+                    head: [['NO', 'JENIS MESIN', 'UNIT', 'HM AWAL', 'HM AKHIR', 'SELISIH', 'TOTAL HM', 'STATUS']],
+                    body: tableData,
+                    headStyles: {
+                        fillColor: [13, 71, 161],
+                        textColor: [255, 255, 255],
+                        fontSize: 8
+                    },
+                    bodyStyles: {
+                        fontSize: 7
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 8 },    // NO
+                        1: { cellWidth: 30 },   // JENIS MESIN
+                        2: { cellWidth: 25 },   // UNIT
+                        3: { cellWidth: 20 },   // HM AWAL
+                        4: { cellWidth: 20 },   // HM AKHIR
+                        5: { cellWidth: 20 },   // SELISIH
+                        6: { cellWidth: 25 },   // TOTAL HM
+                        7: { cellWidth: 20 }    // STATUS
+                    },
+                    margin: { left: 15, right: 15 }, // SYMMETRICAL margins
+                    styles: {
+                        overflow: 'linebreak',
+                        cellPadding: 2,
+                        cellWidth: 'wrap'
+                    },
+                    tableWidth: 'auto'
+                });
+                
+                // Get the final Y position after the table
+                yPos = doc.lastAutoTable.finalY + 10;
+            } else {
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(9);
+                doc.text('Belum ada data mesin', 15, yPos + 5);
+                yPos += 10;
+            }
+            
+            // Spare Part Summary - FULL WIDTH with SYMMETRICAL margins
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(13, 71, 161);
+            doc.text('RINGKASAN SPARE PART', 15, yPos);
+            
+            yPos += 5;
+            
+            // Spare part table data
+            const sparePartTableData = [];
+            let spareCounter = 1;
+            
+            Object.keys(sparePartData).forEach(type => {
+                sparePartData[type].forEach(part => {
+                    if (part.used > 0 || part.lifetime > 0) {
+                        const remaining = part.lifetime - part.used;
+                        let status = "NORMAL";
+                        if (remaining <= 0) status = "REPLACE NOW";
+                        else if (remaining < 50) status = "CRITICAL";
+                        else if (remaining < 200) status = "WARNING";
+                        
+                        sparePartTableData.push([
+                            spareCounter.toString(),
+                            getMachineDisplayName(type),
+                            part.name,
+                            part.lifetime.toString(),
+                            part.used.toFixed(0),
+                            remaining.toFixed(0),
+                            status
+                        ]);
+                        spareCounter++;
+                    }
+                });
+            });
+            
+            if (sparePartTableData.length > 0) {
+                doc.autoTable({
+                    startY: yPos,
+                    head: [['NO', 'MESIN', 'SPARE PART', 'LIFETIME', 'TERPAKAI', 'SISA', 'STATUS']],
+                    body: sparePartTableData,
+                    headStyles: {
+                        fillColor: [33, 150, 243],
+                        textColor: [255, 255, 255],
+                        fontSize: 8
+                    },
+                    bodyStyles: {
+                        fontSize: 7
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 8 },    // NO
+                        1: { cellWidth: 25 },   // MESIN
+                        2: { cellWidth: 40 },   // SPARE PART
+                        3: { cellWidth: 20 },   // LIFETIME
+                        4: { cellWidth: 20 },   // TERPAKAI
+                        5: { cellWidth: 20 },   // SISA
+                        6: { cellWidth: 22 }    // STATUS
+                    },
+                    margin: { left: 15, right: 15 }, // SYMMETRICAL margins
+                    styles: {
+                        overflow: 'linebreak',
+                        cellPadding: 2,
+                        cellWidth: 'wrap'
+                    },
+                    tableWidth: 'auto'
+                });
+                
+                yPos = doc.lastAutoTable.finalY + 10;
+            } else {
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(9);
+                doc.text('Belum ada data spare part', 15, yPos + 5);
+                yPos += 10;
+            }
+            
+            // Notes section - FULL WIDTH
+            yPos += 5;
+            doc.setDrawColor(255, 152, 0);
+            doc.setFillColor(255, 248, 225);
+            doc.rect(15, yPos, 180, 30, 'FD'); // FULL WIDTH (210-15-15=180)
+            
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(255, 152, 0);
+            doc.text('CATATAN PENTING:', 20, yPos + 8);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(0, 0, 0);
+            
+            const notes = [
+                'Rumus perhitungan HM: HM Hari Ini = HM Akhir - HM Awal',
+                'Total HM = Kumulatif + HM Hari Ini',
+                'Status CRITICAL memerlukan tindakan segera',
+                'Laporan ini valid untuk periode yang ditentukan',
+                'HM diukur dalam satuan jam (hours)'
+            ];
+            
+            notes.forEach((note, index) => {
+                // Split long lines - FULL WIDTH
+                const lines = doc.splitTextToSize(note, 170);
+                lines.forEach((line, lineIndex) => {
+                    doc.text(`• ${line}`, 20, yPos + 15 + (index * 4 + lineIndex * 4));
+                });
+            });
+            
+            // Footer - FULL WIDTH
+            yPos += 35;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Laporan ini digenerate secara otomatis oleh Sistem HM Mesin PMKS - PT. Bangkitgiat Usaha Mandiri', 105, yPos, { align: 'center' });
+            yPos += 4;
+            doc.text(`Versi: 1.0 | Generated by: ${asisten} | Page 1 of 1`, 105, yPos, { align: 'center' });
+            
+            // Save the PDF
+            doc.save(`Laporan_FDF_HM_Mesin_PKS_${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}.pdf`);
+            
+            showNotification('Laporan PDF berhasil di-generate!', 'success');
+        }
+
+        // Print Report
+        function printReport() {
+            const printContent = document.getElementById('reportPreview').innerHTML;
+            const originalContent = document.body.innerHTML;
+            
+            document.body.innerHTML = printContent;
+            window.print();
+            document.body.innerHTML = originalContent;
+            
+            // Reinitialize the app
+            setTimeout(() => {
+                document.body.innerHTML = originalContent;
+                initApp();
+            }, 100);
+        }
+
+        // Reset Report
+        function resetReport() {
+            document.getElementById('reportPeriod').value = 'daily';
+            document.getElementById('reportAsisten').value = 'Jonius Abertus';
+            document.getElementById('reportPreview').innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #999;">
+                    <i class="fas fa-file-pdf" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                    Klik "PREVIEW" untuk melihat laporan
+                </div>
+            `;
+            showNotification('Form laporan telah direset', 'info');
+        }
+
+        // Reset Form
+        function resetForm() {
+            if (!confirm('Reset semua input?')) return;
+            
+            document.getElementById('hmAwal').value = '';
+            document.getElementById('hmAkhir').value = '';
+            document.getElementById('hmNotes').value = '';
+            document.getElementById('resultSelisih').innerHTML = `0.00<span class="result-unit"> jam</span>`;
+            
+            // Reset status selection
+            selectedStatus = 'normal';
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.status-btn.normal').classList.add('active');
+            
+            // Reset machine selection
+            document.querySelectorAll('.machine-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.remove('warning');
+                btn.classList.remove('danger');
+            });
+            
+            selectedMachine = null;
+            selectedType = null;
+            selectedNumber = null;
+            document.getElementById('selectedMachine').value = 'Pilih mesin terlebih dahulu';
+            document.getElementById('machineLabel').innerHTML = `<i class="fas fa-industry"></i> MESIN TERPILIH`;
+            
+            showNotification('Form telah direset', 'info');
+        }
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>/
